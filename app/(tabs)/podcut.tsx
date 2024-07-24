@@ -1,0 +1,143 @@
+import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native'
+import React, { useEffect } from 'react';
+import { useLocalSearchParams, router } from 'expo-router';
+import icons from '@/constants/icons';
+import CustomButton from '../components/CustomButton';
+import TrackPlayer, { useActiveTrack, usePlaybackState, State } from 'react-native-track-player';
+import { getTranscript } from '@/functions/transcribe';
+import FloatingPlayer from './floatingPlayer';
+
+const PodCut = () => {
+    const handleGoBack = () => {router.back()}
+    const { id, title, podcastName, image, audioUrl } = useLocalSearchParams<{
+        id: string; title: string; podcastName: string; image: any; audioUrl: string;
+    }>()
+    
+    const playbackState = usePlaybackState(); const currentTrack = useActiveTrack();
+
+    const tracks = [
+        {
+            id: 0,
+            url: audioUrl || "",
+            title: title,
+            artist: podcastName,
+            artwork: image || "",
+        },
+    ];
+
+    // const getTranscriptData = async () => {
+    //     try {
+    //         const transcriptData = await getTranscript();
+    //         return transcriptData;
+    //     } catch (error) {
+    //         console.error("Error fetching transcript:", error);
+    //         return null;
+    //     }
+    // }
+
+    // useEffect(() => {
+    //     getTranscriptData().then((transcriptData) => {
+    //         setTranscript(transcriptData);
+    //     });
+    // }, [])
+
+    const toggleSound = async () => {
+        if (currentTrack) {
+            if (playbackState.state === State.Playing) {
+                await TrackPlayer.pause();
+            } else {
+                await TrackPlayer.play();
+            }
+        } else {
+            await TrackPlayer.reset();
+            await TrackPlayer.add(tracks);
+            await TrackPlayer.play();
+        }
+    }
+    const cuts = [
+        {
+            
+            title: "Intro",
+            from: "00:00:00",
+            to: "00:01:40",
+        },
+        {
+            title: "Sponsor: Spotify",
+            from: "00:01:40",
+            to: "00:03:30",
+        },
+        {
+            title: "Sponsor: AG1",
+            from: "00:03:30",
+            to: "00:05:04",
+        },
+        {
+            title: "Welcome to guest Dr. Stuart McGill",
+            from: "00:05:04",
+            to: "00:07:13",
+        },
+        {
+            title: "Anatomy of the Back",
+            from: "00:07:13",
+            to: "00:09:15",
+        },
+        {
+            title: "The Mcgill Big 3",
+            from: "00:09:15",
+            to: "00:11:20",
+        },
+        {
+            title: "Best excersizes for back pain",
+            from: "00:11:20",
+            to: "00:13:30",
+        },
+        {
+            title: "Research on average life expectancy",
+            from: "00:13:30",
+            to: "00:16:40",
+        },
+        {
+            title: "The 3 most important things for back health",
+            from: "00:16:40",
+            to: "00:20:14",
+        },
+        {
+            title: "Outro",
+            from: "00:20:14",
+            to: "00:21:30",
+        }
+    ]
+    
+    return (
+        <SafeAreaView className='bg-secondary h-full'>
+            <TouchableOpacity onPress={handleGoBack} className='p-4'>
+                <Image source={icons.leftArrow} resizeMode='contain' className='w-[20px] h-[20px]' tintColor={"#2e2a72"} />
+            </TouchableOpacity>
+            <View className='flex-row items-center justify-center p-3'>
+                <Image source={{ uri : image }} resizeMode='contain' className='w-[90px] h-[90px] rounded-lg' />
+                <View className='flex-1 items-center justify-start'>
+                    <Text className="text-tertiary text-2xl font-poppinsBold">{title}</Text>
+                    <Text className='text-tertiary text-lg font-poppinsMedium'>{podcastName}</Text>
+                </View>
+            </View>
+            <TouchableOpacity onPress={toggleSound} className='p-3'>
+                <Image source={(playbackState.state === State.Playing) ? icons.pause : icons.play} resizeMode='contain' className='w-[70px] h-[70px]' tintColor={"#2e2a72"} />
+            </TouchableOpacity>
+            <Text className='text-tertiary text-2xl font-poppinsBold pt-3 px-4'>Cuts</Text>
+            <ScrollView className='px-3'>
+                {cuts.map((cut, index) => (
+                    <TouchableOpacity key={index} className="my-1 flex-row items-center space-x-4 p-0.5 border-2 border-gray-200 rounded-lg bg-secondary shadow-lg">
+                     <View className='flex-row justify-between w-full items-center'>
+                        <Text numberOfLines={1} className="text-base font-poppinsSemiBold flex-shrink text-tertiary p-2">{cut.title}</Text>
+                        <Text numberOfLines={1} className="text-sm font-poppinsRegular flex-shrink text-tertiary p-2">{cut.from}</Text>
+                        <CustomButton title="Show Notes" handlePress={() => {}} />
+                      </View>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
+            <FloatingPlayer />
+        </SafeAreaView>
+    )
+}
+
+export default PodCut
