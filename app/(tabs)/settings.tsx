@@ -1,9 +1,9 @@
-import { View, Text, SafeAreaView, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { View, Text, SafeAreaView, TouchableOpacity, Image, ScrollView, NativeModules } from 'react-native';
 import { UserContext } from '../context'; import { useContext } from 'react';
 import { auth } from '../firebase'; import { signOut } from 'firebase/auth';
 import CustomButton from '../components/CustomButton';
 import icons from '@/constants/icons';
-import { router } from 'expo-router';
+import { router } from 'expo-router';  import React, { useEffect } from 'react';
 
 const Settings = () => {
   const { user, username } = useContext(UserContext);

@@ -4,43 +4,48 @@ import { useLocalSearchParams, router } from 'expo-router';
 import icons from '@/constants/icons';
 import CustomButton from '../components/CustomButton';
 import TrackPlayer, { useActiveTrack, usePlaybackState, State } from 'react-native-track-player';
-import { getTranscript } from '@/functions/transcribe';
 import FloatingPlayer from './floatingPlayer';
+import { trimAudio } from '../../functions/trimAudio2';
+
+
+
 
 const PodCut = () => {
     const handleGoBack = () => {router.back()}
     const { id, title, podcastName, image, audioUrl } = useLocalSearchParams<{
         id: string; title: string; podcastName: string; image: any; audioUrl: string;
     }>()
-    
+
+    function extractLastHttpsUrl(uri: string): string {
+        const lastHttpsIndex = uri.lastIndexOf('https');
+        if (lastHttpsIndex === -1) {
+          return uri;// If 'https' is not found, return the original URI
+        }
+        return uri.slice(lastHttpsIndex);
+    }
+
     const playbackState = usePlaybackState(); const currentTrack = useActiveTrack();
+    const tracks: any[] = [];
 
-    const tracks = [
-        {
-            id: 0,
-            url: audioUrl || "",
-            title: title,
-            artist: podcastName,
+    useEffect(() => {
+        console.log("Audio Url untrimmed: " + audioUrl);
+        console.log("Audio Url http processed: " + extractLastHttpsUrl(audioUrl || ""));
+        trim2();
+    }, [])
+
+
+    const trim2 = async () => {
+        const res = await trimAudio(extractLastHttpsUrl(audioUrl || ""), 10000, 30000);
+        console.log("Trimmed Audio Uri: " + res);
+        await TrackPlayer.add({
+            url: res || "",
+            title: "Track 2",
+            artist: "Artist 2",
             artwork: image || "",
-        },
-    ];
+        });
+    }
 
-    // const getTranscriptData = async () => {
-    //     try {
-    //         const transcriptData = await getTranscript();
-    //         return transcriptData;
-    //     } catch (error) {
-    //         console.error("Error fetching transcript:", error);
-    //         return null;
-    //     }
-    // }
-
-    // useEffect(() => {
-    //     getTranscriptData().then((transcriptData) => {
-    //         setTranscript(transcriptData);
-    //     });
-    // }, [])
-
+    
     const toggleSound = async () => {
         if (currentTrack) {
             if (playbackState.state === State.Playing) {
@@ -107,7 +112,6 @@ const PodCut = () => {
             to: "00:21:30",
         }
     ]
-    
     return (
         <SafeAreaView className='bg-secondary h-full'>
             <TouchableOpacity onPress={handleGoBack} className='p-4'>

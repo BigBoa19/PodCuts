@@ -11,7 +11,11 @@ const data = {
   audio_url: FILE_URL
 }
 
-export const getTranscript = async () => {
+const transcribe = async () => {
   const transcript = await client.transcripts.transcribe(data);
-  return transcript.text;
+  console.log(transcript.text);
+  return transcript.text ? transcript.text : '';
 };
+
+
+transcribe();
