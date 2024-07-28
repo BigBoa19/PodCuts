@@ -1,5 +1,3 @@
-// package json: "main": "expo-router/entry",
-
 import { Redirect } from "expo-router";
 import React from "react";
 import { View } from "react-native";

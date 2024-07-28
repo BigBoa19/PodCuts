@@ -1,5 +1,5 @@
 import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView, KeyboardAvoidingView } from 'react-native'
-import { useState } from 'react'
+import React from 'react'
 import images from '@/constants/images'; import icons from '@/constants/icons'
 import FormField from '../components/FormField'; import CustomButton from '../components/CustomButton'
 import { Link, router } from 'expo-router'
@@ -10,12 +10,12 @@ const SignUp = () => {
   const handleGoBack = () => {
     router.back()
   }
-  const [form, setForm] = useState({
+  const [form, setForm] = React.useState({
     username: '',
     email: '',
     password: ''
   })
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = React.useState(false)
 
 
   const createUser = async () => {

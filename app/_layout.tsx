@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { SplashScreen, Stack } from 'expo-router'; import { useFonts } from 'expo-font';
 import useUserData from '../functions/useUserData'; import { UserContext } from './context';
 import TrackPlayer from 'react-native-track-player';
@@ -22,7 +22,7 @@ const RootLayout = () => {
     "Poppins-Thin" : require("../assets/fonts/Poppins-Thin.ttf"),
   })
   
-  useEffect(() => {
+  React.useEffect(() => {
     if(error) throw error;
     if(fontsLoaded) SplashScreen.hideAsync();
   }

@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react'; import { UserContext } from '../context';
+import React from 'react'; import { UserContext } from '../context';
 import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native'
 import images from '@/constants/images'; import icons from '@/constants/icons'
 import FormField from '../components/FormField'; import CustomButton from '../components/CustomButton'
@@ -7,7 +7,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from '../firebase';
 
 const SignIn = () => {
-  const userData = useContext(UserContext);
+  const userData = React.useContext(UserContext);
   if(userData.user) {
     return <Redirect href='/pods'/>
   }
@@ -15,11 +15,11 @@ const SignIn = () => {
   const handleGoBack = () => {
     router.back()
   }
-  const [form, setForm] = useState({
+  const [form, setForm] = React.useState({
     email: '',
     password: ''
   })
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = React.useState(false)
 
   const login = async () => {
     setIsLoading(true)

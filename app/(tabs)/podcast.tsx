@@ -1,5 +1,5 @@
 import { View, Text, SafeAreaView, TouchableOpacity, Image, FlatList } from 'react-native';
-import React, { useContext, useEffect } from 'react';
+import React from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import icons from '@/constants/icons';
 import getPodcastEpisodes from '@/functions/rssParsing';
@@ -8,7 +8,7 @@ import { UserContext } from '../context';
 
 const Podcast = () => {
     const handleGoBack = () => {router.back()}
-    const { user } = useContext(UserContext);
+    const { user } = React.useContext(UserContext);
     const [episodes, setEpisodes] = React.useState<any[]>([]);
     const { id, image, podcastName, feedUrl } = useLocalSearchParams<{
         id: string; image: any;
@@ -19,7 +19,7 @@ const Podcast = () => {
         setEpisodes(await getPodcastEpisodes(feedUrl ? feedUrl : ""));
     }
 
-    useEffect(() => {
+    React.useEffect(() => {
         getEpisodes();
     }, [feedUrl])
 

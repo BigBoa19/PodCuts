@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import Animated, { Easing, cancelAnimation, useAnimatedStyle, useSharedValue, withRepeat, withTiming, withDelay } from 'react-native-reanimated';
 
 export type MovingTextProps = {
@@ -12,7 +12,7 @@ const MovingText = ({ text, animationThreshold, style }: MovingTextProps) => {
     const shouldAnimate = text.length >= animationThreshold;
     const textWidth = text.length * 3;
 
-    useEffect(() => {
+    React.useEffect(() => {
         if(!shouldAnimate) return;
         translateX.value = withDelay(
 			1000,

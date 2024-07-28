@@ -1,12 +1,12 @@
-import { View, Text, SafeAreaView, TouchableOpacity, Image, ScrollView, NativeModules } from 'react-native';
-import { UserContext } from '../context'; import { useContext } from 'react';
+import { View, Text, SafeAreaView, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { UserContext } from '../context'; import React from 'react';
 import { auth } from '../firebase'; import { signOut } from 'firebase/auth';
 import CustomButton from '../components/CustomButton';
 import icons from '@/constants/icons';
-import { router } from 'expo-router';  import React, { useEffect } from 'react';
+import { router } from 'expo-router';
 
 const Settings = () => {
-  const { user, username } = useContext(UserContext);
+  const { user, username } = React.useContext(UserContext);
   const handleGoBack = () => {router.back()}
 
   const SignOut = async () => {

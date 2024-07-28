@@ -1,27 +1,26 @@
 import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native'
 import React from 'react';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import icons from '@/constants/icons';
-import TrackPlayer, { useProgress, useActiveTrack, usePlaybackState, State } from 'react-native-track-player';
+import TrackPlayer, { useProgress, useActiveTrack, usePlaybackState, State, AddTrack } from 'react-native-track-player';
 import Slider from '@react-native-community/slider';
 
 const Player = () => {
-    const handleGoBack = () => {router.back()}
     const { id, title, podcastName, image, audioUrl } = useLocalSearchParams<{
         id: string; title: string; podcastName: string; image: string; audioUrl: string;
     }>()
     const { position, duration } = useProgress();
     const playbackState = usePlaybackState(); const currentTrack = useActiveTrack();
     // List of tracks
-    const tracks = [
-        {
-            id: 0,
-            url: audioUrl || "",
-            title: title,
-            artist: podcastName,
-            artwork: image || "",
-        },
-    ];
+    const [tracks, setTracks] = React.useState<AddTrack[]>([]);
+
+    const getTracks = async () => {
+        const tracks = await TrackPlayer.getQueue();
+        setTracks(tracks);
+    }
+
+    React.useEffect(() => {getTracks();},[]);
+
     // Toggle sound
     const toggleSound = async () => {
         if (currentTrack) {
@@ -32,7 +31,7 @@ const Player = () => {
             }
         } else {
             await TrackPlayer.add(tracks);
-        await TrackPlayer.play();
+            await TrackPlayer.play();
         }
     }
     // Seek the sound to a specific position
@@ -79,13 +78,11 @@ const Player = () => {
 
     return (
         <SafeAreaView className='bg-secondary h-full flex-1'>
-            <TouchableOpacity onPress={handleGoBack} className='p-4'>
-                <Image source={icons.leftArrow} resizeMode='contain' className='w-[20px] h-[20px]' tintColor={"#2e2a72"} />
-            </TouchableOpacity>
+
             <View className='flex-1 items-center'>
                 <Text className='text-lg font-poppinsSemiBold text-tertiary mt-2'>{podcastName}</Text>
                 {/* <Text className='text-xl font-poppinsBold text-tertiary mt-4' numberOfLines={1} ellipsizeMode="tail">{title}</Text> */}
-                <Image source={{ uri: image }} className="w-[150px] h-[150px] rounded-lg mx-auto mt-6"/>
+                <Image source={{ uri: currentTrack?.artwork }} className="w-[150px] h-[150px] rounded-lg mx-auto mt-6"/>
                 <Text className='text-2xl font-poppinsBold text-tertiary mt-4' numberOfLines={1} ellipsizeMode="tail">{currentTrack?.title}</Text>
                 
                 <Slider
@@ -114,9 +111,9 @@ const Player = () => {
                         onPress={skipToTrack(track.id)}>
                             <View className='flex-row items-center justify-between w-full'>
                             <Text className="text-base font-poppinsSemiBold flex-shrink text-tertiary p-2" numberOfLines={1} ellipsizeMode='tail'>{track.title}</Text>
-                            <Text className="text-sm font-poppinsRegular text-tertiary p-2">{formatTime(duration)}</Text>
+                            <Text className="text-sm font-poppinsRegular text-tertiary p-2">{formatTime(track.duration ? track.duration/1000 : 0)}</Text>
                             </View>
-                        </TouchableOpacity>  
+                        </TouchableOpacity>
                     ))}
                 </ScrollView>
             </View>

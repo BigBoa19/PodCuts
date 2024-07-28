@@ -1,45 +1,40 @@
-import * as Bytescale from "@bytescale/sdk";
-import ReactNativeBlobUtil from 'react-native-blob-util';
-import axios from 'axios';
-import { or } from "firebase/firestore";
+import * as FileSystem from 'expo-file-system';
 
-
-const uploadManager = new Bytescale.UploadManager({
-  apiKey: "public_kW15cAZ5kmGyBjFLobLjx4e7RDx4"
-});
-
-const uploadAudio = async (blob) => {
+export const trimAudio = async (audioUri, intervals) => {
   try {
-    const { fileUrl, filePath } = await uploadManager.upload({ data: blob, mime: 'audio/mp3' });
-    console.log('File uploaded successfully:', fileUrl);
-    return fileUrl;
-  } catch (e) {
-    console.error('Error uploading file:', e.message);
-    throw e;
-  }
-}
+    // Prepare the request body
+    const body = JSON.stringify({
+      audio_uri: audioUri,
+      intervals: intervals
+    });
 
-const getTrimedUrl = async (fileUrl, startTime, endTime) => {
-  const audioUrl = fileUrl.replace('/raw/', '/audio/');
-  return `${audioUrl}?ts=${startTime}&te=${endTime}&f=mp3`;
-}
+    // Send a POST request to the Flask API to trim the audio
+    const response = await fetch('http://127.0.0.1:5000/trim_audio', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: body
+    });
 
-export const trimAudio = async (originalUrl, startTime, endTime) => {
-  const base64 = await ReactNativeBlobUtil.fetch('GET', "https://storage.googleapis.com/aai-web-samples/5_common_sports_injuries.mp3", {'Content-Type': 'BASE64'});
-  const response = await base64.blob('audio/mp3', 512);
-  console.log('Blob response:', response);
-  const url = await uploadAudio(response);
-  const trimedUrl = await getTrimedUrl(url, startTime, endTime);
-  try {
-    const response = await axios.get(trimedUrl)
-    setTimeout(() => {
-      //console.log('Audio trimmed successfully:', response.data);
-    }, 10000);
-    
-    return response.data;
-    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const responseData = await response.json();
+    const savedFiles = [];
+    for (const file of responseData) {
+      const trimmedAudioUri = `${FileSystem.documentDirectory}${Date.now()}${file.filename}`;
+
+      const base64Data = btoa(file.file);
+
+      await FileSystem.writeAsStringAsync(trimmedAudioUri, base64Data, {encoding: FileSystem.EncodingType.Base64});
+      savedFiles.push(trimmedAudioUri);
+    }
+
+    return savedFiles;
   } catch (error) {
     console.error('Error trimming audio:', error);
     throw error;
   }
-}
+};

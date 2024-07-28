@@ -1,10 +1,10 @@
 import { auth, db } from '../app/firebase';
 import { doc, getDoc } from 'firebase/firestore'; import { onAuthStateChanged, User } from 'firebase/auth';
-import { useEffect, useState } from 'react';
+import React from 'react';
 
 export default function useUserData() {
-  const [user, setUser] = useState<User | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
+  const [user, setUser] = React.useState<User | null>(null);
+  const [username, setUsername] = React.useState<string | null>(null);
 
   const getUsername = async (uid: string) => {
     try {
@@ -23,7 +23,7 @@ export default function useUserData() {
   }
 
 
-  useEffect(() => {
+  React.useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       if (user && user.uid) {

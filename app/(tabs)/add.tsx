@@ -1,14 +1,14 @@
 import { View, Text, SafeAreaView, TouchableOpacity, FlatList, Image, ActivityIndicator } from 'react-native';
-import React, { useState } from 'react'
+import React from 'react'
 import fetchPodcastData from '@/functions/fetchPodcastData';
 import icons from '@/constants/icons';
 import { router } from 'expo-router';
 import FormField from '../components/FormField';
 
 const Add = () => {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [podcasts, setPodcasts] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+    const [searchTerm, setSearchTerm] = React.useState('');
+    const [podcasts, setPodcasts] = React.useState<any[]>([]);
+    const [isLoading, setIsLoading] = React.useState(false);
 
     const handleGoBack = () => {router.back()}
 

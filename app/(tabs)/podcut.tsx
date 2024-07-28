@@ -1,53 +1,45 @@
 import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native'
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import icons from '@/constants/icons';
 import CustomButton from '../components/CustomButton';
 import TrackPlayer, { useActiveTrack, usePlaybackState, State } from 'react-native-track-player';
 import FloatingPlayer from './floatingPlayer';
-import { trimAudio } from '../../functions/trimAudio2';
-
-
-
+import { trimAudio } from '../../functions/trimAudio';
 
 const PodCut = () => {
     const handleGoBack = () => {router.back()}
     const { id, title, podcastName, image, audioUrl } = useLocalSearchParams<{
         id: string; title: string; podcastName: string; image: any; audioUrl: string;
     }>()
-
-    function extractLastHttpsUrl(uri: string): string {
-        const lastHttpsIndex = uri.lastIndexOf('https');
-        if (lastHttpsIndex === -1) {
-          return uri;// If 'https' is not found, return the original URI
-        }
-        return uri.slice(lastHttpsIndex);
-    }
-
     const playbackState = usePlaybackState(); const currentTrack = useActiveTrack();
-    const tracks: any[] = [];
 
-    useEffect(() => {
-        console.log("Audio Url untrimmed: " + audioUrl);
-        console.log("Audio Url http processed: " + extractLastHttpsUrl(audioUrl || ""));
-        trim2();
-    }, [])
-
-
-    const trim2 = async () => {
-        const res = await trimAudio(extractLastHttpsUrl(audioUrl || ""), 10000, 30000);
-        console.log("Trimmed Audio Uri: " + res);
-        await TrackPlayer.add({
-            url: res || "",
-            title: "Track 2",
-            artist: "Artist 2",
-            artwork: image || "",
-        });
+    const trim = async () => {
+        const intervals = [
+            [0, 30000],
+            [30000, 45000],
+            [45000, 90000],
+            [90000, 140000],
+            [140000, 150000]
+          ];  // List of intervals in milliseconds
+        const trimmedUrls = await trimAudio(audioUrl, intervals);
+        console.log('Trimmed audio files:', trimmedUrls);
+        let index = 0;
+        for (const url of trimmedUrls) {
+            await TrackPlayer.add({
+                id: index,
+                url: url,
+                title: title,
+                artist: podcastName,
+                duration: intervals[index][1] - intervals[index][0],
+                artwork: image || "",
+            });
+            index++;
+        }
     }
 
-    
     const toggleSound = async () => {
-        if (currentTrack) {
+        if (currentTrack && currentTrack.artist === podcastName) {
             if (playbackState.state === State.Playing) {
                 await TrackPlayer.pause();
             } else {
@@ -55,7 +47,7 @@ const PodCut = () => {
             }
         } else {
             await TrackPlayer.reset();
-            await TrackPlayer.add(tracks);
+            await trim();
             await TrackPlayer.play();
         }
     }
@@ -112,6 +104,7 @@ const PodCut = () => {
             to: "00:21:30",
         }
     ]
+
     return (
         <SafeAreaView className='bg-secondary h-full'>
             <TouchableOpacity onPress={handleGoBack} className='p-4'>
@@ -125,7 +118,7 @@ const PodCut = () => {
                 </View>
             </View>
             <TouchableOpacity onPress={toggleSound} className='p-3'>
-                <Image source={(playbackState.state === State.Playing) ? icons.pause : icons.play} resizeMode='contain' className='w-[70px] h-[70px]' tintColor={"#2e2a72"} />
+                <Image source={(playbackState.state === State.Playing && currentTrack?.artist === podcastName) ? icons.pause : icons.play} resizeMode='contain' className='w-[70px] h-[70px]' tintColor={"#2e2a72"} />
             </TouchableOpacity>
             <Text className='text-tertiary text-2xl font-poppinsBold pt-3 px-4'>Cuts</Text>
             <ScrollView className='px-3'>
