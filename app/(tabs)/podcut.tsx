@@ -1,4 +1,4 @@
-import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native'
+import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native'
 import React from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import icons from '@/constants/icons';
@@ -6,6 +6,8 @@ import CustomButton from '../components/CustomButton';
 import TrackPlayer, { useActiveTrack, usePlaybackState, State } from 'react-native-track-player';
 import FloatingPlayer from './floatingPlayer';
 import { trimAudio } from '../../functions/trimAudio';
+import { trimAudioB } from '../../functions/trimAudioBytescale';
+import { transcribeUrl } from '../../functions/transcribe';
 
 const PodCut = () => {
     const handleGoBack = () => {router.back()}
@@ -13,8 +15,10 @@ const PodCut = () => {
         id: string; title: string; podcastName: string; image: any; audioUrl: string;
     }>()
     const playbackState = usePlaybackState(); const currentTrack = useActiveTrack();
+    const [isLoading, setIsLoading] = React.useState(false);
+    const [transcript, setTranscript] = React.useState("");
 
-    const trim = async () => {
+    const trimWithServer = async () => {
         const intervals = [
             [0, 30000],
             [30000, 45000],
@@ -37,20 +41,39 @@ const PodCut = () => {
             index++;
         }
     }
+    const trimWithApi = async () => {
+        const res = await fetch(audioUrl || "");
+        const trimmedUrl = await trimAudioB(res.url, 10, 15);
+        console.log('Trimmed audio file:', trimmedUrl);
+        await TrackPlayer.add({
+            id: 0,
+            url: trimmedUrl,
+            title: title,
+            artist: podcastName,
+            duration: 5000,
+            artwork: image || "",
+        });
+    }
+
 
     const toggleSound = async () => {
         if (currentTrack && currentTrack.artist === podcastName) {
             if (playbackState.state === State.Playing) {
                 await TrackPlayer.pause();
             } else {
-                await TrackPlayer.play();
+                try {
+                    await TrackPlayer.play();
+                } catch (error) {
+                    console.error('Error playing track:', error);
+                }
             }
         } else {
             await TrackPlayer.reset();
-            await trim();
+            // await trim();
             await TrackPlayer.play();
         }
     }
+
     const cuts = [
         {
             
@@ -105,6 +128,14 @@ const PodCut = () => {
         }
     ]
 
+    const getTranscript = async () => {
+        setIsLoading(true);
+        setTranscript(await transcribeUrl(audioUrl ? audioUrl : ""))
+        setIsLoading(false);
+    }
+
+    // React.useEffect(() => {getTranscript();}, []);
+
     return (
         <SafeAreaView className='bg-secondary h-full'>
             <TouchableOpacity onPress={handleGoBack} className='p-4'>
@@ -117,6 +148,13 @@ const PodCut = () => {
                     <Text className='text-tertiary text-lg font-poppinsMedium'>{podcastName}</Text>
                 </View>
             </View>
+            <View className="flex-row justify-between">
+                <CustomButton title="Trim with API" handlePress={trimWithApi} />
+                <CustomButton title="Generate Transcript" handlePress={getTranscript} />
+            </View>
+            {isLoading ? <ActivityIndicator size="large" color="#111111" className='p-3'/> : 
+            <Text numberOfLines={6} className='text-tertiary font-poppinsRegular'>{transcript}</Text>}
+            
             <TouchableOpacity onPress={toggleSound} className='p-3'>
                 <Image source={(playbackState.state === State.Playing && currentTrack?.artist === podcastName) ? icons.pause : icons.play} resizeMode='contain' className='w-[70px] h-[70px]' tintColor={"#2e2a72"} />
             </TouchableOpacity>

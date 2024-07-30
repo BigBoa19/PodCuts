@@ -17,7 +17,12 @@ const FloatingPlayer = () => {
         if (playbackState.state === State.Playing) {
             await TrackPlayer.pause();
         } else {
-            await TrackPlayer.play();
+            try {
+                await TrackPlayer.play();
+            } catch (error) {
+                console.error('Failed to play', error);
+            }
+            
         }
     }
     // Skip to the Next sound

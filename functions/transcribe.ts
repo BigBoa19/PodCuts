@@ -1,21 +1,26 @@
-import { AssemblyAI } from 'assemblyai';
+const { createClient } = require("@deepgram/sdk");
 
-const client = new AssemblyAI({
-  apiKey: 'e8f9634b365541e786bcb03981ddfbe3',
-});
+export const transcribeUrl = async (audioUrl: string) => {
+  // STEP 1: Create a Deepgram client using the API key
+  const apiKey = process.env.DEEPGRAM_KEY;
+  const deepgram = createClient("2e586604120576786ec9521e61fae75cb7b70da1");
 
-const FILE_URL =
-  'https://storage.googleapis.com/aai-web-samples/5_common_sports_injuries.mp3';
+  // STEP 2: Call the transcribeUrl method with the audio payload and options
+  const { result, error } = await deepgram.listen.prerecorded.transcribeUrl(
+    {
+      url: audioUrl,
+    },
+    // STEP 3: Configure Deepgram options for audio analysis
+    {
+      model: "nova-2",
+      smart_format: true,
+    }
+  );
 
-const data = {
-  audio_url: FILE_URL
-}
-
-const transcribe = async () => {
-  const transcript = await client.transcripts.transcribe(data);
-  console.log(transcript.text);
-  return transcript.text ? transcript.text : '';
+  if (error) throw error;
+  // STEP 4: Print the results
+  if (!error) {
+    console.dir(result, { depth: null });
+    return result.results.channels[0].alternatives[0].transcript;
+  }
 };
-
-
-transcribe();

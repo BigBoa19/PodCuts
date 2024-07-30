@@ -1,4 +1,3 @@
-import { Timestamp } from 'firebase/firestore';
 import * as rssParser from 'react-native-rss-parser';
 
 interface PodcastItem {
