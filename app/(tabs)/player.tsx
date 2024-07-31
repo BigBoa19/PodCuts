@@ -111,7 +111,7 @@ const Player = () => {
                         onPress={skipToTrack(track.id)}>
                             <View className='flex-row items-center justify-between w-full'>
                             <Text className="text-base font-poppinsSemiBold flex-shrink text-tertiary p-2" numberOfLines={1} ellipsizeMode='tail'>{track.title}</Text>
-                            <Text className="text-sm font-poppinsRegular text-tertiary p-2">{formatTime(track.duration ? track.duration/1000 : 0)}</Text>
+                            <Text className="text-sm font-poppinsRegular text-tertiary p-2">{formatTime(track.duration ? track.duration : 0)}</Text>
                             </View>
                         </TouchableOpacity>
                     ))}

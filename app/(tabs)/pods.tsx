@@ -91,7 +91,7 @@ const Pods = () => {
             onPress={() => 
               router.push({
               pathname: "/podcut",
-              params: { id: pod.id, title: pod.title, podcastName: pod.podcastName, image: pod.image, audioUrl: pod.audioUrl}})}>
+              params: { id: pod.id, title: pod.title, podcastName: pod.podcastName, image: pod.image, audioUrl: pod.audioUrl, transcript: pod.transcript}})}>
               <Image source={{ uri: pod.image }} className="w-[72px] h-[72px] rounded-lg" />
               <View className='flex-1 justify-center'>
                 <Text className="text-sm font-poppinsSemiBold flex-shrink text-tertiary" numberOfLines={2} ellipsizeMode="tail">{pod.title}</Text>

@@ -11,12 +11,11 @@ import { transcribeUrl } from '../../functions/transcribe';
 
 const PodCut = () => {
     const handleGoBack = () => {router.back()}
-    const { id, title, podcastName, image, audioUrl } = useLocalSearchParams<{
-        id: string; title: string; podcastName: string; image: any; audioUrl: string;
+    const { id, title, podcastName, image, audioUrl, transcript } = useLocalSearchParams<{
+        id: string; title: string; podcastName: string; image: any; audioUrl: string; transcript: string;
     }>()
     const playbackState = usePlaybackState(); const currentTrack = useActiveTrack();
     const [isLoading, setIsLoading] = React.useState(false);
-    const [transcript, setTranscript] = React.useState("");
 
     const trimWithServer = async () => {
         const intervals = [
@@ -25,7 +24,7 @@ const PodCut = () => {
             [45000, 90000],
             [90000, 140000],
             [140000, 150000]
-          ];  // List of intervals in milliseconds
+        ];  // List of intervals in milliseconds
         const trimmedUrls = await trimAudio(audioUrl, intervals);
         console.log('Trimmed audio files:', trimmedUrls);
         let index = 0;
@@ -42,19 +41,28 @@ const PodCut = () => {
         }
     }
     const trimWithApi = async () => {
+        const intervals = [
+            [0, 3],
+            [3, 4.5],
+            [4.5, 9],
+            [9, 14],
+            [14, 20]
+        ];
         const res = await fetch(audioUrl || "");
-        const trimmedUrl = await trimAudioB(res.url, 10, 15);
-        console.log('Trimmed audio file:', trimmedUrl);
-        await TrackPlayer.add({
-            id: 0,
-            url: trimmedUrl,
-            title: title,
-            artist: podcastName,
-            duration: 5000,
-            artwork: image || "",
-        });
+        const trimmedUrls = await trimAudioB(res.url, intervals);
+        let index = 0;
+        for (const url of trimmedUrls) {
+            await TrackPlayer.add({
+                id: index,
+                url: url,
+                title: title,
+                artist: podcastName,
+                duration: intervals[index][1] - intervals[index][0],
+                artwork: image || "",
+            });
+            index++;
+        }
     }
-
 
     const toggleSound = async () => {
         if (currentTrack && currentTrack.artist === podcastName) {
@@ -128,14 +136,6 @@ const PodCut = () => {
         }
     ]
 
-    const getTranscript = async () => {
-        setIsLoading(true);
-        setTranscript(await transcribeUrl(audioUrl ? audioUrl : ""))
-        setIsLoading(false);
-    }
-
-    // React.useEffect(() => {getTranscript();}, []);
-
     return (
         <SafeAreaView className='bg-secondary h-full'>
             <TouchableOpacity onPress={handleGoBack} className='p-4'>
@@ -150,7 +150,6 @@ const PodCut = () => {
             </View>
             <View className="flex-row justify-between">
                 <CustomButton title="Trim with API" handlePress={trimWithApi} />
-                <CustomButton title="Generate Transcript" handlePress={getTranscript} />
             </View>
             {isLoading ? <ActivityIndicator size="large" color="#111111" className='p-3'/> : 
             <Text numberOfLines={6} className='text-tertiary font-poppinsRegular'>{transcript}</Text>}

@@ -5,11 +5,18 @@ import icons from '@/constants/icons';
 import getPodcastEpisodes from '@/functions/rssParsing';
 import { addDoc, collection, doc } from 'firebase/firestore'; import { db } from '../firebase';
 import { UserContext } from '../context';
+import { transcribeUrl } from '@/functions/transcribe';
+
+interface PodcastEpisode {
+    title: string;
+    audioUrl: string;
+    description: string;
+  }
 
 const Podcast = () => {
     const handleGoBack = () => {router.back()}
     const { user } = React.useContext(UserContext);
-    const [episodes, setEpisodes] = React.useState<any[]>([]);
+    const [episodes, setEpisodes] = React.useState<PodcastEpisode[]>([]);
     const { id, image, podcastName, feedUrl } = useLocalSearchParams<{
         id: string; image: any;
         podcastName: string; feedUrl: string;
@@ -25,14 +32,16 @@ const Podcast = () => {
 
     const limitedEpisodes = episodes.slice(0, 5);
 
-    const addEpisodeTodb = async (episodeData: Object) => {
+    const addEpisodeTodb = async (episodeData: PodcastEpisode) => {
         try {
             router.navigate("/pods");
             const usersDocRef = doc(db, 'users', user?.uid || '');
             const episodesCollectionRef = collection(usersDocRef, 'episodes');
+            const transcript = await transcribeUrl(episodeData.audioUrl);
             const docRef = await addDoc(episodesCollectionRef, {
                 podcastName: podcastName,
                 image: image,
+                transcript: transcript,
                 ...episodeData
             });
             console.log("Document written with ID: ", docRef.id);

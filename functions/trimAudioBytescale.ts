@@ -27,20 +27,24 @@ const getTrimedUrl = async (fileUrl: string, startTime: number, endTime: number)
   return `${audioUrl}?ts=${startTime}&te=${endTime}&f=mp3`;
 }
 
-export const trimAudioB = async (originalUrl: string, startTime: number, endTime: number) => {
+export const trimAudioB = async (originalUrl: string, intervals: number[][]) => {
   const url = await uploadAudio(originalUrl);
-  const trimedUrl = await getTrimedUrl(url, startTime, endTime);
+  const trimmedUrls = [];
   try {
-    const response = await pollForCompletion(trimedUrl);
-    return response;
-  } catch (error) {
+    for (const [start, end] of intervals) {
+      const trimedUrl = await getTrimedUrl(url, start, end);
+      const response = await pollForCompletion(trimedUrl);
+      trimmedUrls.push(response);
+    }
+    return trimmedUrls;
+  }catch (error) {
     console.error('Error trimming audio:', error);
     throw error;
   }
 }
 
 const pollForCompletion = async (pollUrl: string): Promise<string> => {
-  const pollInterval = 4000;
+  const pollInterval = 3000;
 
   return new Promise((resolve, reject) => {
     const poll = async () => {
@@ -51,10 +55,8 @@ const pollForCompletion = async (pollUrl: string): Promise<string> => {
         if (status === 'Succeeded') {
           const audioFileUrl = response.data.summary.result.artifactUrl;
           resolve(audioFileUrl);
-        } else if (status === 'Pending') {
-          setTimeout(poll, pollInterval);
         } else {
-          reject(new Error('Audio processing failed'));
+          setTimeout(poll, pollInterval);
         }
       } catch (error) {
         console.error('Failed to poll for completion:', error);
