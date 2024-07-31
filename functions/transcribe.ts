@@ -2,8 +2,8 @@ const { createClient } = require("@deepgram/sdk");
 
 export const transcribeUrl = async (audioUrl: string) => {
   // STEP 1: Create a Deepgram client using the API key
-  const apiKey = process.env.DEEPGRAM_KEY;
-  const deepgram = createClient("2e586604120576786ec9521e61fae75cb7b70da1");
+  const apiKey = process.env.EXPO_PUBLIC_DEEPGRAM_KEY;
+  const deepgram = createClient(apiKey);
 
   // STEP 2: Call the transcribeUrl method with the audio payload and options
   const { result, error } = await deepgram.listen.prerecorded.transcribeUrl(

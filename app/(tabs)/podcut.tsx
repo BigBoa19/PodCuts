@@ -16,7 +16,6 @@ const PodCut = () => {
         id: string; title: string; podcastName: string; image: any; audioUrl: string; transcript: string;
     }>()
     const playbackState = usePlaybackState(); const currentTrack = useActiveTrack();
-    const [isLoading, setIsLoading] = React.useState(false);
 
     function extractStartEndTimes(url: string): [number | null, number | null] {
         try {
@@ -67,7 +66,7 @@ const PodCut = () => {
     }
 
     const toggleSound = async () => {
-        if (currentTrack && currentTrack.artist === podcastName) {
+        if (currentTrack && currentTrack.title === title) {
             if (playbackState.state === State.Playing) {
                 await TrackPlayer.pause();
             } else {
@@ -152,11 +151,10 @@ const PodCut = () => {
             </View>
             <View className="flex-row justify-between">
             </View>
-            {isLoading ? <ActivityIndicator size="large" color="#111111" className='p-3'/> : 
-            <Text numberOfLines={6} className='text-tertiary font-poppinsRegular'>{transcript}</Text>}
             
+            <Text numberOfLines={6} className='text-tertiary font-poppinsRegular'>{transcript}</Text>
             <TouchableOpacity onPress={toggleSound} className='p-3'>
-                <Image source={(playbackState.state === State.Playing && currentTrack?.artist === podcastName) ? icons.pause : icons.play} resizeMode='contain' className='w-[70px] h-[70px]' tintColor={"#2e2a72"} />
+                <Image source={(playbackState.state === State.Playing && currentTrack?.title === title) ? icons.pause : icons.play} resizeMode='contain' className='w-[70px] h-[70px]' tintColor={"#2e2a72"} />
             </TouchableOpacity>
             <Text className='text-tertiary text-2xl font-poppinsBold pt-3 px-4'>Cuts</Text>
             <ScrollView className='px-3'>

@@ -2,7 +2,7 @@ import * as Bytescale from "@bytescale/sdk";
 import axios from 'axios';
 
 const uploadApi = new Bytescale.UploadApi({
-  apiKey: "public_kW15cAZ5kmGyBjFLobLjx4e7RDx4"
+  apiKey: process.env.EXPO_PUBLIC_BYTESCALE_KEY || "",
 });
 
 const uploadAudio = async (url: string) => {

@@ -12,7 +12,7 @@ interface PodcastEpisode {
     title: string;
     audioUrl: string;
     description: string;
-  }
+}
 
 const Podcast = () => {
     const handleGoBack = () => {router.back()}
