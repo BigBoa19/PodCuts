@@ -3,7 +3,8 @@ import { View, Text, TouchableOpacity, ScrollView, Image, SafeAreaView, Activity
 import icons from '@/constants/icons';
 import FormField from '../components/FormField'; import FloatingPlayer from './floatingPlayer';
 import { router, useFocusEffect, useNavigation } from 'expo-router';
-import { collection, doc, getDocs, query } from 'firebase/firestore'; import { db } from '../firebase';
+import { collection, deleteDoc, doc, getDocs, query } from 'firebase/firestore'; import { db } from '../firebase';
+import CustomButton from '../components/CustomButton';
 
 const Pods = () => { 
   const handleNavigateSettings = () => {router.navigate("/settings")}
@@ -35,6 +36,20 @@ const Pods = () => {
       setIsLoading(false);
     }
   }
+
+  const deleteEpisode = (id: string) => async () => {
+    try {
+      const usersDocRef = doc(db, 'users', user?.uid || '');
+      const episodesCollectionRef = collection(usersDocRef, 'episodes');
+      const episodeDocRef = doc(episodesCollectionRef, id);
+      await deleteDoc(episodeDocRef);
+      const updatedEpisodes = podcastEpisodes.filter((episode) => episode.id !== id);
+      setPodcastEpisodes(updatedEpisodes);
+      setFilteredPodcastEpisodes(updatedEpisodes);
+    } catch (error) {
+      console.error('Error deleting document: ', error);
+    }
+  }
   
   useFocusEffect(
     React.useCallback(() => {
@@ -57,7 +72,7 @@ const Pods = () => {
 
   React.useEffect(() => {
     const newData = podcastEpisodes.filter((item) => {
-      const itemData = item.episodeTitle ? item.episodeTitle.toUpperCase() : ''.toUpperCase();
+      const itemData = item.title ? item.title.toUpperCase() : ''.toUpperCase();
       const textData = searchTerm.toUpperCase();
       return itemData.indexOf(textData) > -1;
     });
@@ -86,7 +101,7 @@ const Pods = () => {
       {/* List */}
       {isLoading ? <ActivityIndicator size="large" color="#2e2a72" className='p-3'/> : 
         <ScrollView className="bg-secondary flex-1 p-3">
-          {filteredPodcastEpisodes.map((pod) => (
+          {filteredPodcastEpisodes.map((pod) => ( 
             <TouchableOpacity key={pod.id} className="my-1 flex-row items-center space-x-4 p-0.5 border-2 border-primary rounded-lg bg-secondary shadow-lg" 
             onPress={() => 
               router.push({
@@ -97,6 +112,7 @@ const Pods = () => {
                 <Text className="text-sm font-poppinsSemiBold flex-shrink text-tertiary" numberOfLines={2} ellipsizeMode="tail">{pod.title}</Text>
                 <Text className="text-sm font-poppinsRegular flex-shrink text-tertiary" numberOfLines={1} ellipsizeMode="tail">{pod.podcastName}</Text>
               </View>
+              <CustomButton title="Delete" textStyles='text-sm' containerStyles='p-1' handlePress={deleteEpisode(pod.id)} />
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -107,5 +123,3 @@ const Pods = () => {
 }
 
 export default Pods
-
-  

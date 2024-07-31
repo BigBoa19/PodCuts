@@ -27,7 +27,7 @@ const getTrimedUrl = async (fileUrl: string, startTime: number, endTime: number)
   return `${audioUrl}?ts=${startTime}&te=${endTime}&f=mp3`;
 }
 
-export const trimAudioB = async (originalUrl: string, intervals: number[][]) => {
+export const trimAudioBytescale = async (originalUrl: string, intervals: number[][]) => {
   const url = await uploadAudio(originalUrl);
   const trimmedUrls = [];
   try {

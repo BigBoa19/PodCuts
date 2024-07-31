@@ -5,63 +5,65 @@ import icons from '@/constants/icons';
 import CustomButton from '../components/CustomButton';
 import TrackPlayer, { useActiveTrack, usePlaybackState, State } from 'react-native-track-player';
 import FloatingPlayer from './floatingPlayer';
-import { trimAudio } from '../../functions/trimAudio';
-import { trimAudioB } from '../../functions/trimAudioBytescale';
-import { transcribeUrl } from '../../functions/transcribe';
+import { collection, doc, getDoc } from 'firebase/firestore';
+import { UserContext } from '../context';
+import { db } from '../firebase';
 
 const PodCut = () => {
     const handleGoBack = () => {router.back()}
+    const { user } = React.useContext(UserContext);
     const { id, title, podcastName, image, audioUrl, transcript } = useLocalSearchParams<{
         id: string; title: string; podcastName: string; image: any; audioUrl: string; transcript: string;
     }>()
     const playbackState = usePlaybackState(); const currentTrack = useActiveTrack();
     const [isLoading, setIsLoading] = React.useState(false);
 
-    const trimWithServer = async () => {
-        const intervals = [
-            [0, 30000],
-            [30000, 45000],
-            [45000, 90000],
-            [90000, 140000],
-            [140000, 150000]
-        ];  // List of intervals in milliseconds
-        const trimmedUrls = await trimAudio(audioUrl, intervals);
-        console.log('Trimmed audio files:', trimmedUrls);
-        let index = 0;
-        for (const url of trimmedUrls) {
-            await TrackPlayer.add({
-                id: index,
-                url: url,
-                title: title,
-                artist: podcastName,
-                duration: intervals[index][1] - intervals[index][0],
-                artwork: image || "",
-            });
-            index++;
+    function extractStartEndTimes(url: string): [number | null, number | null] {
+        try {
+          const parts = url.split('!');
+          if (parts.length < 2) {throw new Error('Invalid URL format');}
+          const paramString = parts[1];
+      
+          const params = new URLSearchParams(paramString);
+      
+          const startTime = params.get('ts');
+          const endTime = params.get('te');
+      
+          // Convert to numbers, or null if not present
+          const start = startTime ? parseInt(startTime, 10) : null;
+          const end = endTime ? parseInt(endTime, 10) : null;
+      
+          return [start, end];
+        } catch (error) {
+          console.error('Error parsing URL:', error);
+          return [null, null];
         }
     }
-    const trimWithApi = async () => {
-        const intervals = [
-            [0, 3],
-            [3, 4.5],
-            [4.5, 9],
-            [9, 14],
-            [14, 20]
-        ];
-        const res = await fetch(audioUrl || "");
-        const trimmedUrls = await trimAudioB(res.url, intervals);
-        let index = 0;
-        for (const url of trimmedUrls) {
-            await TrackPlayer.add({
-                id: index,
-                url: url,
-                title: title,
-                artist: podcastName,
-                duration: intervals[index][1] - intervals[index][0],
-                artwork: image || "",
-            });
-            index++;
+
+    const addTrimmedUrls = async () => {
+        const usersDocRef = doc(db, 'users', user?.uid || '');
+        const episodesCollectionRef = collection(usersDocRef, 'episodes');
+        const episodeDocRef = doc(episodesCollectionRef, id);
+        const docSnap = await getDoc(episodeDocRef);
+        if (docSnap.exists()) {
+            const trimmedUrls = docSnap.data().trimmedUrls;
+            let index = 0;
+            for (const url of trimmedUrls) {
+                const [start, end] = extractStartEndTimes(url);
+                await TrackPlayer.add({
+                    id: index,
+                    url: url,
+                    title: title,
+                    artist: podcastName,
+                    duration: (end || 10) - (start || 0),
+                    artwork: image || "",
+                });
+                index++;
+            }
+        } else {
+            console.log('No such document!');
         }
+        
     }
 
     const toggleSound = async () => {
@@ -77,7 +79,7 @@ const PodCut = () => {
             }
         } else {
             await TrackPlayer.reset();
-            // await trim();
+            await addTrimmedUrls();
             await TrackPlayer.play();
         }
     }
@@ -149,7 +151,6 @@ const PodCut = () => {
                 </View>
             </View>
             <View className="flex-row justify-between">
-                <CustomButton title="Trim with API" handlePress={trimWithApi} />
             </View>
             {isLoading ? <ActivityIndicator size="large" color="#111111" className='p-3'/> : 
             <Text numberOfLines={6} className='text-tertiary font-poppinsRegular'>{transcript}</Text>}

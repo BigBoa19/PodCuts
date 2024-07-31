@@ -6,6 +6,7 @@ import getPodcastEpisodes from '@/functions/rssParsing';
 import { addDoc, collection, doc } from 'firebase/firestore'; import { db } from '../firebase';
 import { UserContext } from '../context';
 import { transcribeUrl } from '@/functions/transcribe';
+import { trimAudioBytescale } from '@/functions/trimAudioBytescale';
 
 interface PodcastEpisode {
     title: string;
@@ -32,16 +33,29 @@ const Podcast = () => {
 
     const limitedEpisodes = episodes.slice(0, 5);
 
+    const getTrimmedUrls = async (audioUrl: string) => {
+        const intervals = [
+            [0, 35],
+            [35, 100],
+            [100, 120]
+        ];
+        const res = await fetch(audioUrl || "");
+        const trimmedUrls = await trimAudioBytescale(res.url, intervals);
+        return trimmedUrls;
+    }
+
     const addEpisodeTodb = async (episodeData: PodcastEpisode) => {
         try {
             router.navigate("/pods");
             const usersDocRef = doc(db, 'users', user?.uid || '');
             const episodesCollectionRef = collection(usersDocRef, 'episodes');
             const transcript = await transcribeUrl(episodeData.audioUrl);
+            const trimmedUrls = await getTrimmedUrls(episodeData.audioUrl);
             const docRef = await addDoc(episodesCollectionRef, {
                 podcastName: podcastName,
                 image: image,
                 transcript: transcript,
+                trimmedUrls: trimmedUrls,
                 ...episodeData
             });
             console.log("Document written with ID: ", docRef.id);
