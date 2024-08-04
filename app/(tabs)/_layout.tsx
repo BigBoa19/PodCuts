@@ -18,6 +18,7 @@ const TabsLayout = () => {
           
           }} />
         <Stack.Screen name="floatingPlayer" options={{ headerShown: false }} />
+        <Stack.Screen name="saved" options={{ headerShown: false }} />
     </Stack>
   )
 }

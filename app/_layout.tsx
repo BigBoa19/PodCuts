@@ -31,7 +31,7 @@ const RootLayout = () => {
   
   
   return (
-    <UserContext.Provider value={{ user: userData.user, username: userData.username }}>
+    <UserContext.Provider value={{ user: userData.user }}>
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

@@ -6,9 +6,6 @@ import TrackPlayer, { useProgress, useActiveTrack, usePlaybackState, State, AddT
 import Slider from '@react-native-community/slider';
 
 const Player = () => {
-    const { id, title, podcastName, image, audioUrl } = useLocalSearchParams<{
-        id: string; title: string; podcastName: string; image: string; audioUrl: string;
-    }>()
     const { position, duration } = useProgress();
     const playbackState = usePlaybackState(); const currentTrack = useActiveTrack();
     // List of tracks
@@ -21,7 +18,7 @@ const Player = () => {
 
     React.useEffect(() => {getTracks();},[]);
 
-    // Toggle sound
+
     const toggleSound = async () => {
         if (currentTrack) {
             if (playbackState.state === State.Playing) {
@@ -30,11 +27,12 @@ const Player = () => {
                 await TrackPlayer.play();
             }
         } else {
+            await TrackPlayer.reset();
             await TrackPlayer.add(tracks);
             await TrackPlayer.play();
         }
     }
-    // Seek the sound to a specific position
+
     const seekSound = async (seconds: number) => {
         try {
             TrackPlayer.seekTo(seconds);
@@ -42,7 +40,7 @@ const Player = () => {
             console.error('Failed to seek sound', error);
         }
     }
-    // Skip to the Next sound
+
     const nextSound = async () => {
         try {
             await TrackPlayer.skipToNext();
@@ -51,7 +49,7 @@ const Player = () => {
             console.error('Failed to skip to next', error);
         }
     }
-    // Skip to the Previous sound
+
     const previousSound = async () => {
         try {
             await TrackPlayer.skipToPrevious();
@@ -80,8 +78,7 @@ const Player = () => {
         <SafeAreaView className='bg-secondary h-full flex-1'>
 
             <View className='flex-1 items-center'>
-                <Text className='text-lg font-poppinsSemiBold text-tertiary mt-2'>{podcastName}</Text>
-                {/* <Text className='text-xl font-poppinsBold text-tertiary mt-4' numberOfLines={1} ellipsizeMode="tail">{title}</Text> */}
+                <Text className='text-lg font-poppinsSemiBold text-tertiary mt-2'>{currentTrack?.artist}</Text>
                 <Image source={{ uri: currentTrack?.artwork }} className="w-[150px] h-[150px] rounded-lg mx-auto mt-6"/>
                 <Text className='text-2xl font-poppinsBold text-tertiary mt-4' numberOfLines={1} ellipsizeMode="tail">{currentTrack?.title}</Text>
                 

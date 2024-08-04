@@ -2,15 +2,44 @@ import React from 'react'; import { UserContext } from '../context';
 import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native'
 import images from '@/constants/images'; import icons from '@/constants/icons'
 import FormField from '../components/FormField'; import CustomButton from '../components/CustomButton'
-import { Link, Redirect, router } from 'expo-router'
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from '../firebase';
+import { Link, router } from 'expo-router'
+import * as Google from 'expo-auth-session/providers/google';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential, User } from "firebase/auth";
+import { auth, db } from '../firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 const SignIn = () => {
   const userData = React.useContext(UserContext);
-  if(userData.user) {
-    return <Redirect href='/pods'/>
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    iosClientId: '460321896686-ttu39rq7iq33jcjc667fijdnb1dheda8.apps.googleusercontent.com'
+  });
+
+  const addUserToDatabase = async (user: User) => {
+    const date = new Date();
+    const dateString = date.toLocaleString();
+    const usersDocRef = doc(db, 'users', user.uid);
+    await setDoc(usersDocRef, { email: user.email, timestamp: dateString}, { merge: true } );
   }
+
+  React.useEffect(() => {
+    if (response?.type === 'success') {
+      const { id_token } = response.params;
+      const credential = GoogleAuthProvider.credential(id_token);
+      signInWithCredential(auth, credential).then((userCredential) => {
+        const user = userCredential.user;
+        addUserToDatabase(user)
+        router.push('/pods')
+      }).catch((error) => {
+        console.log('Error: ', error)
+      });
+    }
+  }, [response]);
+
+  React.useEffect(() => {
+    if(userData.user) {
+      router.push('/pods')
+    }
+  }, [userData.user])
   
   const handleGoBack = () => {
     router.back()
@@ -25,7 +54,7 @@ const SignIn = () => {
     setIsLoading(true)
     try {
       const response = await signInWithEmailAndPassword(auth, form.email, form.password)
-      router.navigate('/pods')
+      router.push('/pods')
     } catch (error: any) {
       // console.log(error)
       alert('Sign In Failed: '+ error.message)
@@ -86,6 +115,13 @@ const SignIn = () => {
             >
               Sign Up
             </Link>
+          </View>
+          <View className="flex justify-center pt-5">
+            <TouchableOpacity onPress={() => promptAsync()} className="flex-row items-center justify-center bg-white p-2 rounded-lg mt-2">
+              <Text className="text-tertiary font-poppinsSemiBold text-lg ml-2">
+                Continue with Google
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>

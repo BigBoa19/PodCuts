@@ -1,4 +1,4 @@
-package com.bigboa19.reactnativetestapp
+package com.bigboa19.podcuts
 
 import android.os.Build
 import android.os.Bundle

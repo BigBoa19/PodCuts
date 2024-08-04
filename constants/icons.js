@@ -11,6 +11,8 @@ import pause from "../assets/icons/pause.png";
 import next from "../assets/icons/next.png";
 import previous from "../assets/icons/previous.png";
 import play2 from "../assets/icons/play2.png";
+import trash from "../assets/icons/trash.png";
+import save from "../assets/icons/save.png"
 
 
 export default {
@@ -27,5 +29,6 @@ export default {
   next,
   previous,
   play2,
-
+  trash,
+  save,
 };

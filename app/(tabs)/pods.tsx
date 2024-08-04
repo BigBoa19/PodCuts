@@ -1,14 +1,15 @@
 import React from 'react'; import { UserContext } from '../context';
-import { View, Text, TouchableOpacity, ScrollView, Image, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
 import icons from '@/constants/icons';
 import FormField from '../components/FormField'; import FloatingPlayer from './floatingPlayer';
 import { router, useFocusEffect, useNavigation } from 'expo-router';
-import { collection, deleteDoc, doc, getDocs, query } from 'firebase/firestore'; import { db } from '../firebase';
+import { collection, deleteDoc, doc, getDocs, onSnapshot, query } from 'firebase/firestore'; import { db } from '../firebase';
 import CustomButton from '../components/CustomButton';
+import TrackPlayer from 'react-native-track-player';
 
 const Pods = () => { 
-  const handleNavigateSettings = () => {router.navigate("/settings")}
-  const handleNavigateAdd = () => {router.navigate("/add")}
+  const handleNavigateSettings = () => {router.push("/settings")}
+  const handleNavigateAdd = () => {router.push("/add")}
   const [isLoading, setIsLoading] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [podcastEpisodes, setPodcastEpisodes] = React.useState<any[]>([]);
@@ -18,6 +19,7 @@ const Pods = () => {
   const { user } = React.useContext(UserContext);
   
   const getUserEpisodes = async () => {
+    if (!user) return null;
     setIsLoading(true);
     try {
       const usersDocRef = doc(db, 'users', user?.uid || '');
@@ -50,24 +52,47 @@ const Pods = () => {
       console.error('Error deleting document: ', error);
     }
   }
-  
-  useFocusEffect(
-    React.useCallback(() => {
-      if(previousScreen === 'podcast'){
-        getUserEpisodes().then((episodes) => {
-          setPodcastEpisodes(episodes);
-          setFilteredPodcastEpisodes(episodes);
-        });
-      }
-    }, [])
-  );
+
+  const showDeleteAlert = (id: string) => {
+    return () => {
+      Alert.alert(
+        "Delete Episode",
+        "Are you sure you want to delete this episode?",
+        [
+          {
+            text: "Cancel",
+            onPress: () => {},
+            style: "cancel"
+          },
+          { text: "Delete", onPress: deleteEpisode(id) }
+        ]
+      );
+    }
+  }
 
   React.useEffect(() => {
-    getUserEpisodes().then((episodes) => {
+    if (!user) return;
+
+    setIsLoading(true);
+    const usersDocRef = doc(db, 'users', user?.uid || '');
+    const episodesCollectionRef = collection(usersDocRef, 'episodes');
+    const q = query(episodesCollectionRef);
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const episodes = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+      }));
       setPodcastEpisodes(episodes);
       setFilteredPodcastEpisodes(episodes);
+      setIsLoading(false);
+    }, (error) => {
+      console.error('Error getting documents: ', error);
+      setIsLoading(false);
     });
-  },[user])
+
+    return () => unsubscribe();
+  }, [user]);
 
 
   React.useEffect(() => {
@@ -89,30 +114,57 @@ const Pods = () => {
             <Image source={icons.plus} resizeMode='contain' className='w-[22px] h-[22px]' style={{tintColor: '#2e2a72'}} />
           </TouchableOpacity>
         </View>
-          <TouchableOpacity onPress={handleNavigateSettings} className='p-3'>
-            <Image source={icons.settings} resizeMode='contain' className='w-[26px] h-[26px]' style={{tintColor: '#2e2a72'}} />
-          </TouchableOpacity>
+          <View className='flex-row items-center justify-end'>
+            <CustomButton title="View Saved" textStyles='text-base' containerStyles='p-2' handlePress={() => {router.push("/saved")}} />
+            <TouchableOpacity onPress={handleNavigateSettings} className='p-3'>
+              <Image source={icons.settings} resizeMode='contain' className='w-[26px] h-[26px]' style={{tintColor: '#2e2a72'}} />
+            </TouchableOpacity>
+          </View>
       </View>
       {/* Search Bar */}
       <FormField
           value={searchTerm} placeholder='Search for Episodes' handleChangeText={(e) => setSearchTerm(e)}
           otherStyles='w-full relative px-2' startCaps={true}
       />
+      {(filteredPodcastEpisodes.length === 0 && !isLoading ) && <Text className='text-center text-tertiary font-poppinsRegular'>No Episodes Found</Text>}
       {/* List */}
       {isLoading ? <ActivityIndicator size="large" color="#2e2a72" className='p-3'/> : 
-        <ScrollView className="bg-secondary flex-1 p-3">
+        <ScrollView className="bg-secondary flex-1 p-3 w-full">
           {filteredPodcastEpisodes.map((pod) => ( 
             <TouchableOpacity key={pod.id} className="my-1 flex-row items-center space-x-4 p-0.5 border-2 border-primary rounded-lg bg-secondary shadow-lg" 
-            onPress={() => 
+            onPress={() => {
+              if (pod.loading) return;
               router.push({
               pathname: "/podcut",
-              params: { id: pod.id, title: pod.title, podcastName: pod.podcastName, image: pod.image, audioUrl: pod.audioUrl, transcript: pod.transcript}})}>
+              params: { id: pod.id, title: pod.title, podcastName: pod.podcastName, image: pod.image, audioUrl: pod.audioUrl, transcript: pod.transcript}})}}>
               <Image source={{ uri: pod.image }} className="w-[72px] h-[72px] rounded-lg" />
               <View className='flex-1 justify-center'>
                 <Text className="text-sm font-poppinsSemiBold flex-shrink text-tertiary" numberOfLines={2} ellipsizeMode="tail">{pod.title}</Text>
                 <Text className="text-sm font-poppinsRegular flex-shrink text-tertiary" numberOfLines={1} ellipsizeMode="tail">{pod.podcastName}</Text>
+                
+                {pod.loading && 
+                <View className='flex-row'>
+                  <Text className="text-sm font-poppinsBold flex-shrink text-tertiary">Preparing Cuts...</Text>
+                  <CustomButton title="Listen to episode" containerStyles='p-2' textStyles='text-sm' handlePress={() => {
+                    TrackPlayer.reset();
+                    TrackPlayer.add({
+                        id: 0,
+                        url: pod.audioUrl,
+                        title: pod.title,
+                        artist: pod.podcastName,
+                        artwork: pod.image || "",
+                    });
+                    TrackPlayer.play();
+                  }} />
+                </View>
+                }
+
+                
+                
               </View>
-              <CustomButton title="Delete" textStyles='text-sm' containerStyles='p-1' handlePress={deleteEpisode(pod.id)} />
+              <TouchableOpacity onPress={showDeleteAlert(pod.id)} className='p-2'>
+                <Image source={icons.trash} resizeMode='contain' className='w-[22px] h-[22px]' style={{tintColor: '#A30000'}} />
+              </TouchableOpacity>
             </TouchableOpacity>
           ))}
         </ScrollView>

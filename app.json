@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.bigboa19.reactnativetestapp",
+      "bundleIdentifier": "com.bigboa19.podcuts",
       "infoPlist": {
         "UIBackgroundModes": [
           "audio"
@@ -26,7 +26,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.bigboa19.reactnativetestapp"
+      "package": "com.bigboa19.podcuts"
     },
     "web": {
       "bundler": "metro",

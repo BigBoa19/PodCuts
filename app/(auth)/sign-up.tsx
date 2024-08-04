@@ -17,7 +17,6 @@ const SignUp = () => {
   })
   const [isLoading, setIsLoading] = React.useState(false)
 
-
   const createUser = async () => {
     setIsLoading(true)
     try {

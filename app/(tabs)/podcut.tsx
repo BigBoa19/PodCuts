@@ -1,4 +1,4 @@
-import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native'
+import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native'
 import React from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import icons from '@/constants/icons';
@@ -63,6 +63,12 @@ const PodCut = () => {
             console.log('No such document!');
         }
         
+    }
+
+    const startPlay = async () => {
+        await TrackPlayer.reset();
+        await addTrimmedUrls();
+        await TrackPlayer.play();
     }
 
     const toggleSound = async () => {
@@ -136,7 +142,7 @@ const PodCut = () => {
             to: "00:21:30",
         }
     ]
-
+    // if transcript === null, then explain and show a preview
     return (
         <SafeAreaView className='bg-secondary h-full'>
             <TouchableOpacity onPress={handleGoBack} className='p-4'>
@@ -149,21 +155,23 @@ const PodCut = () => {
                     <Text className='text-tertiary text-lg font-poppinsMedium'>{podcastName}</Text>
                 </View>
             </View>
-            <View className="flex-row justify-between">
-            </View>
             
-            <Text numberOfLines={6} className='text-tertiary font-poppinsRegular'>{transcript}</Text>
-            <TouchableOpacity onPress={toggleSound} className='p-3'>
-                <Image source={(playbackState.state === State.Playing && currentTrack?.title === title) ? icons.pause : icons.play} resizeMode='contain' className='w-[70px] h-[70px]' tintColor={"#2e2a72"} />
-            </TouchableOpacity>
+            <Text numberOfLines={3} className='text-tertiary font-poppinsRegular'>{transcript}</Text>
+            <CustomButton title="Start Playing" containerStyles='p-2 my-3' textStyles='text-base' handlePress={startPlay} />
+            
             <Text className='text-tertiary text-2xl font-poppinsBold pt-3 px-4'>Cuts</Text>
             <ScrollView className='px-3'>
                 {cuts.map((cut, index) => (
-                    <TouchableOpacity key={index} className="my-1 flex-row items-center space-x-4 p-0.5 border-2 border-gray-200 rounded-lg bg-secondary shadow-lg">
-                     <View className='flex-row justify-between w-full items-center'>
+                    <TouchableOpacity key={index} className="my-1 border-2 border-gray-200 rounded-lg bg-secondary shadow-lg">
+                     <View className='flex-row justify-between w-full items-center p-1'>
                         <Text numberOfLines={1} className="text-base font-poppinsSemiBold flex-shrink text-tertiary p-2">{cut.title}</Text>
-                        <Text numberOfLines={1} className="text-sm font-poppinsRegular flex-shrink text-tertiary p-2">{cut.from}</Text>
-                        <CustomButton title="Show Notes" handlePress={() => {}} />
+                        <View className='flex-row justify-end items-center'>
+                            <Text className="text-sm font-poppinsRegular flex-shrink text-tertiary p-2">{cut.from}</Text>
+                            <TouchableOpacity onPress={() => {}} className='pr-1'>
+                                <Image source={icons.save} resizeMode='contain' className='w-[24px] h-[24px]' tintColor={"#2e2a72"} />
+                            </TouchableOpacity>
+                            <CustomButton title="Notes" containerStyles='p-2' textStyles='text-base' handlePress={() => {}} />
+                        </View>
                       </View>
                     </TouchableOpacity>
                 ))}

@@ -10,7 +10,7 @@ export type MovingTextProps = {
 const MovingText = ({ text, animationThreshold, style }: MovingTextProps) => {
     const translateX = useSharedValue(0);
     const shouldAnimate = text.length >= animationThreshold;
-    const textWidth = text.length * 3;
+    const textWidth = text.length * 5;
 
     React.useEffect(() => {
         if(!shouldAnimate) return;

@@ -3,15 +3,17 @@ import React from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import icons from '@/constants/icons';
 import getPodcastEpisodes from '@/functions/rssParsing';
-import { addDoc, collection, doc } from 'firebase/firestore'; import { db } from '../firebase';
+import { addDoc, collection, doc, setDoc } from 'firebase/firestore'; import { db } from '../firebase';
 import { UserContext } from '../context';
 import { transcribeUrl } from '@/functions/transcribe';
-import { trimAudioBytescale } from '@/functions/trimAudioBytescale';
+import { trimAudio } from '@/functions/trimAudio';
+import { load } from 'react-native-track-player/lib/src/trackPlayer';
 
 interface PodcastEpisode {
     title: string;
     audioUrl: string;
     description: string;
+    published: string;
 }
 
 const Podcast = () => {
@@ -40,25 +42,32 @@ const Podcast = () => {
             [100, 120]
         ];
         const res = await fetch(audioUrl || "");
-        const trimmedUrls = await trimAudioBytescale(res.url, intervals);
+        const trimmedUrls = await trimAudio(res.url, intervals);
         return trimmedUrls;
     }
 
     const addEpisodeTodb = async (episodeData: PodcastEpisode) => {
         try {
-            router.navigate("/pods");
+            router.push("/pods");
             const usersDocRef = doc(db, 'users', user?.uid || '');
             const episodesCollectionRef = collection(usersDocRef, 'episodes');
-            const transcript = await transcribeUrl(episodeData.audioUrl);
-            const trimmedUrls = await getTrimmedUrls(episodeData.audioUrl);
-            const docRef = await addDoc(episodesCollectionRef, {
+            await setDoc(doc(episodesCollectionRef, episodeData.title), {
                 podcastName: podcastName,
                 image: image,
+                loading: true,
+                ...episodeData
+            });
+            const transcript = await transcribeUrl(episodeData.audioUrl);
+            const trimmedUrls = await getTrimmedUrls(episodeData.audioUrl);
+            const docRef = await setDoc(doc(episodesCollectionRef, episodeData.title), {
+                podcastName: podcastName,
+                image: image,
+                loading: false,
                 transcript: transcript,
                 trimmedUrls: trimmedUrls,
                 ...episodeData
             });
-            console.log("Document written with ID: ", docRef.id);
+            console.log("Document written with ID: ", episodeData.title);
             
         } catch (error) {
             console.error("Error adding document: ", error);
@@ -80,6 +89,7 @@ const Podcast = () => {
                 onPress={() => addEpisodeTodb(item)}>
                     <View className='flex-1 justify-center p-2'>
                         <Text className="text-sm font-poppinsSemiBold flex-shrink text-tertiary" numberOfLines={2} ellipsizeMode="tail">{item.title}</Text>
+                        <Text className="text-sm font-poppinsSemiBold flex-shrink text-tertiary" numberOfLines={2} ellipsizeMode="tail">{item.published}</Text>
                     </View>
                 </TouchableOpacity>
             )}

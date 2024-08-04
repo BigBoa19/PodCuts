@@ -7,12 +7,14 @@ interface PodcastItem {
     url: string;
     type: string;
   }>;
+  published: string;
 }
 
 interface PodcastEpisode {
   title: string;
   audioUrl: string;
   description: string;
+  published: string;
 }
 
 export default async function getPodcastEpisodes(feedUrl: string): Promise<PodcastEpisode[]> {
@@ -27,10 +29,12 @@ export default async function getPodcastEpisodes(feedUrl: string): Promise<Podca
       feed.items.forEach((item: unknown) => {
         const episode = item as PodcastItem;
         if (episode.enclosures && episode.enclosures.length > 0) {
+
           episodes.push({
             title: episode.title,
             audioUrl: episode.enclosures[0].url,
             description: episode.description,
+            published: episode.published,
           });
         }
       });

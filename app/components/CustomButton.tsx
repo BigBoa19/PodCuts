@@ -3,11 +3,11 @@ import React from 'react';
 
 type CustomButtonProps = {
     title: string;
-    handlePress: () => void;
+    handlePress: any;
     containerStyles?: string;
     isLoading?: boolean;
     textStyles?: string;
-  }
+}
 
 const CustomButton: React.FC<CustomButtonProps> = ({ title, handlePress, containerStyles, textStyles, isLoading, }) => {
   return (
