@@ -8,8 +8,6 @@ import { router } from 'expo-router';
 
 const FloatingPlayer = () => {
     const currentTrack = useActiveTrack(); const playbackState = usePlaybackState();
-
-    if (!currentTrack) return null;
     
     const displayedTrack = currentTrack;
     // Toggle sound
@@ -40,12 +38,12 @@ const FloatingPlayer = () => {
     }
 
     return (
-        <TouchableOpacity className='absolute bottom-5 left-2 right-2' onPress={() => router.push("/player")}>
-            <View className="bg-secondary border-2 border-primary rounded-2xl shadow-lg p-1 flex-row items-center">
-                <Image source={ {uri: (displayedTrack.artwork ? displayedTrack.artwork : images.hubermanImage)}} className="w-14 h-14 rounded-full"/>
+        <TouchableOpacity className='absolute bottom-4 left-2 right-2 h-[80px]' onPress={() => router.push("/player")}>
+            <View className="bg-secondary border-2 border-primary rounded-2xl shadow-lg p-0.5 flex-row items-center">
+                <Image source={ {uri: (displayedTrack ? displayedTrack.artwork : "https://fastly.picsum.photos/id/524/200/300.jpg?hmac=_0B_jkz8dRd5eIQz0xIlicLaZZnzpRdAH72crtCVvOU")}} className="w-14 h-14 rounded-full"/>
                 <View className="p-2 flex-1 overflow-hidden">
-                    <MovingText text={displayedTrack.title ? displayedTrack.title : ""} animationThreshold={16} style="text-lg text-tertiary font-poppinsSemiBold" />
-                    <Text numberOfLines={1} className="text-sm text-tertiary font-poppinsRegular">{displayedTrack.artist}</Text>
+                    <MovingText text={displayedTrack ? displayedTrack.title || "" : "Not Playing"} animationThreshold={16} style="text-lg text-tertiary font-poppinsSemiBold" />
+                    <Text numberOfLines={1} className="text-sm text-tertiary font-poppinsRegular">{displayedTrack ? displayedTrack.artist : "Not Playing"}</Text>
                 </View>
                 <TouchableOpacity className="px-1" onPress={previousSound}>
                     <Image source={icons.previous} className="w-[24px] h-[24px]" tintColor={"#2e2a72"}/>

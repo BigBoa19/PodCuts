@@ -1,22 +1,13 @@
-const axios = require('axios');
+import OpenAI from "openai";
 
-const segmentText = async (text) => {
-    const url = "https://api.ai21.com/studio/v1/summarize-by-segment";
-  
-    const payload = {
-      sourceType: "TEXT",
-      source: text
-    };
-  
-    const headers = {
-      'Authorization': `Bearer qP2VfckUdkeVoYIVKUaOyyaayaVZmu0A`,
-      'Content-Type': 'application/json'
-    };
-  
-    try {
-      const response = await axios.post(url, payload, { headers });
-      console.log(JSON.stringify(response.data, null, 2));
-    } catch (error) {
-      console.error('Error:', error.response ? error.response.data : error.message);
-    }
-};
+const openai = new OpenAI({apiKey: "sk-None-aIG2vwPzmRYQ2wXgAtCST3BlbkFJ0PtmGQaOxgA0TEYNaGwW"});
+
+export async function main() {
+  const completion = await openai.chat.completions.create({
+    messages: [{"role": "system", "content": "Your Job: When given a large transcript text from a podcast, convert it to chronological list of relevant topics talked about using topic segmentation and summarization."},
+        {"role": "user", "content": "Where was it played?"}],
+    model: "gpt-4o-mini",
+  });
+
+  console.log(completion.choices[0]);
+}

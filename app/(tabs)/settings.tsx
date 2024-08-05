@@ -4,6 +4,7 @@ import { auth } from '../firebase'; import { signOut } from 'firebase/auth';
 import CustomButton from '../components/CustomButton';
 import icons from '@/constants/icons';
 import { router } from 'expo-router';
+import TrackPlayer from 'react-native-track-player';
 
 const Settings = () => {
   const { user } = React.useContext(UserContext);
@@ -12,6 +13,7 @@ const Settings = () => {
   const SignOut = async () => {
     try {
       await signOut(auth);
+      TrackPlayer.reset();
       router.replace('/sign-in');
     } catch (error: any) {
       console.log(error);

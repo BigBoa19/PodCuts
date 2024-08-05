@@ -1,5 +1,5 @@
 import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native'
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import icons from '@/constants/icons';
 import CustomButton from '../components/CustomButton';
@@ -8,6 +8,7 @@ import FloatingPlayer from './floatingPlayer';
 import { collection, doc, getDoc } from 'firebase/firestore';
 import { UserContext } from '../context';
 import { db } from '../firebase';
+import { main } from '../../functions/segment.js'
 
 const PodCut = () => {
     const handleGoBack = () => {router.back()}
@@ -70,6 +71,10 @@ const PodCut = () => {
         await addTrimmedUrls();
         await TrackPlayer.play();
     }
+
+    useEffect(() => {
+        main();
+    }, [])
 
     const toggleSound = async () => {
         if (currentTrack && currentTrack.title === title) {

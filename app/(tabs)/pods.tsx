@@ -105,7 +105,7 @@ const Pods = () => {
   }, [searchTerm, podcastEpisodes])
   
   return (
-    <SafeAreaView className='flex-1 bg-secondary'>
+    <SafeAreaView className='flex-1 bg-secondary items-center'>
       {/* Navigation/Title */}
       <View className='flex-row justify-between items-center pt-4'>
         <View className='flex-row items-center justify-between px-3 py-1'>
@@ -129,7 +129,7 @@ const Pods = () => {
       {(filteredPodcastEpisodes.length === 0 && !isLoading ) && <Text className='text-center text-tertiary font-poppinsRegular'>No Episodes Found</Text>}
       {/* List */}
       {isLoading ? <ActivityIndicator size="large" color="#2e2a72" className='p-3'/> : 
-        <ScrollView className="bg-secondary flex-1 p-3 w-full">
+        <ScrollView className="bg-secondary flex-1 p-3 w-full pb-10">
           {filteredPodcastEpisodes.map((pod) => ( 
             <TouchableOpacity key={pod.id} className="my-1 flex-row items-center space-x-4 p-0.5 border-2 border-primary rounded-lg bg-secondary shadow-lg" 
             onPress={() => {
@@ -158,15 +158,13 @@ const Pods = () => {
                   }} />
                 </View>
                 }
-
-                
-                
               </View>
               <TouchableOpacity onPress={showDeleteAlert(pod.id)} className='p-2'>
                 <Image source={icons.trash} resizeMode='contain' className='w-[22px] h-[22px]' style={{tintColor: '#A30000'}} />
               </TouchableOpacity>
             </TouchableOpacity>
           ))}
+          <Text className='text-3xl opacity-0'>Invisible Padding{'\n'}Invisible Padding</Text>
         </ScrollView>
       }
       <FloatingPlayer />
