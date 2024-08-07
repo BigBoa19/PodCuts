@@ -13,7 +13,7 @@ import { main } from '../../functions/segment.js'
 const PodCut = () => {
     const handleGoBack = () => {router.back()}
     const { user } = React.useContext(UserContext);
-    const { id, title, podcastName, image, audioUrl, transcript } = useLocalSearchParams<{
+    const { id, title, podcastName, image, transcript } = useLocalSearchParams<{
         id: string; title: string; podcastName: string; image: any; audioUrl: string; transcript: string;
     }>()
     const playbackState = usePlaybackState(); const currentTrack = useActiveTrack();
@@ -73,7 +73,7 @@ const PodCut = () => {
     }
 
     useEffect(() => {
-        main();
+        main(transcript);
     }, [])
 
     const toggleSound = async () => {

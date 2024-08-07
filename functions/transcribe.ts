@@ -19,10 +19,13 @@ export const transcribeUrl = async (audioUrl: string) => {
 
   if (error) throw error;
   // STEP 4: Print the results
+
+
   if (!error) {
-    console.dir(result, { depth: null });
+    console.dir(result.results.channels[0].alternatives[0].paragraphs.paragraphs, { depth: null });
     return result.results.channels[0].alternatives[0].transcript;
   }
 };
 
-transcribeUrl("https://d3ctxlq1ktw2nl.cloudfront.net/staging/2024-3-30/376045042-44100-2-c3c7c3bcb346c.mp3");
+// transcript:result.results.channels[0].alternatives[0].transcript
+// sentences: result.results.channels[0].alternatives[0].paragraphs.paragraphs

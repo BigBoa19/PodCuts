@@ -2,8 +2,8 @@ import React from 'react'; import { UserContext } from '../context';
 import { View, Text, TouchableOpacity, ScrollView, Image, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
 import icons from '@/constants/icons';
 import FormField from '../components/FormField'; import FloatingPlayer from './floatingPlayer';
-import { router, useFocusEffect, useNavigation } from 'expo-router';
-import { collection, deleteDoc, doc, getDocs, onSnapshot, query } from 'firebase/firestore'; import { db } from '../firebase';
+import { router } from 'expo-router';
+import { collection, deleteDoc, doc, onSnapshot, query } from 'firebase/firestore'; import { db } from '../firebase';
 import CustomButton from '../components/CustomButton';
 import TrackPlayer from 'react-native-track-player';
 
@@ -14,30 +14,7 @@ const Pods = () => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [podcastEpisodes, setPodcastEpisodes] = React.useState<any[]>([]);
   const [filteredPodcastEpisodes, setFilteredPodcastEpisodes] = React.useState<any[]>([]);
-  const navigation = useNavigation();
-  const previousScreen = navigation.getState().routes[navigation.getState().index - 1]?.name;
   const { user } = React.useContext(UserContext);
-  
-  const getUserEpisodes = async () => {
-    if (!user) return null;
-    setIsLoading(true);
-    try {
-      const usersDocRef = doc(db, 'users', user?.uid || '');
-      const episodesCollectionRef = collection(usersDocRef, 'episodes');
-      const q = query(episodesCollectionRef);
-      const querySnapshot = await getDocs(q);
-      const episodes = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      return episodes;
-    } catch(error) {
-      console.error('Error getting documents: ', error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }
 
   const deleteEpisode = (id: string) => async () => {
     try {
