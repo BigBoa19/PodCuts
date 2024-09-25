@@ -41,9 +41,6 @@ const SignIn = () => {
     }
   }, [userData.user])
   
-  const handleGoBack = () => {
-    router.back()
-  }
   const [form, setForm] = React.useState({
     email: '',
     password: ''
@@ -56,7 +53,6 @@ const SignIn = () => {
       const response = await signInWithEmailAndPassword(auth, form.email, form.password)
       router.push('/pods')
     } catch (error: any) {
-      // console.log(error)
       alert('Sign In Failed: '+ error.message)
     } finally {
       setIsLoading(false)
@@ -65,9 +61,6 @@ const SignIn = () => {
 
   return (
     <SafeAreaView className=' bg-secondary h-full'>
-      <TouchableOpacity onPress={handleGoBack} className='p-4'>
-        <Image source={icons.leftArrow} resizeMode='contain' className='w-[20px] h-[20px]' tintColor={"#2e2a72"} />
-      </TouchableOpacity>
       <ScrollView>
         <View className='flex-1 w-full justify-center h-full px-4 my-6'>
           <Image

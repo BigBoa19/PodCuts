@@ -72,27 +72,9 @@ const PodCut = () => {
         await TrackPlayer.play();
     }
 
-    useEffect(() => {
-        main(transcript);
-    }, [])
-
-    const toggleSound = async () => {
-        if (currentTrack && currentTrack.title === title) {
-            if (playbackState.state === State.Playing) {
-                await TrackPlayer.pause();
-            } else {
-                try {
-                    await TrackPlayer.play();
-                } catch (error) {
-                    console.error('Error playing track:', error);
-                }
-            }
-        } else {
-            await TrackPlayer.reset();
-            await addTrimmedUrls();
-            await TrackPlayer.play();
-        }
-    }
+    // useEffect(() => {
+    //     main(transcript);
+    // }, [])
 
     const cuts = [
         {

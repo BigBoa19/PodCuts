@@ -4,14 +4,13 @@ import images from '@/constants/images'; import icons from '@/constants/icons'
 import FormField from '../components/FormField'; import CustomButton from '../components/CustomButton'
 import { Link, router } from 'expo-router'
 import { auth, db } from '../firebase';
-import { createUserWithEmailAndPassword } from "firebase/auth"; import { doc, writeBatch } from 'firebase/firestore';
+import { createUserWithEmailAndPassword } from "firebase/auth"; import { doc, setDoc } from 'firebase/firestore';
 
 const SignUp = () => {
   const handleGoBack = () => {
     router.back()
   }
   const [form, setForm] = React.useState({
-    username: '',
     email: '',
     password: ''
   })
@@ -22,12 +21,8 @@ const SignUp = () => {
     try {
       const response = await createUserWithEmailAndPassword(auth, form.email, form.password)
       const usersDocRef = doc(db, 'users', response.user.uid)
-      const usernamesDocRef = doc(db, "usernames", form.username);
-      const batch = writeBatch(db)
-      batch.set(usersDocRef, { username: form.username, email: form.email });
-      batch.set(usernamesDocRef, { uid: response.user.uid });
       try {
-        await batch.commit()
+        setDoc(usersDocRef, { email: form.email });
         alert('Sign Up Successful')
       }
       catch (error: any) {
@@ -59,15 +54,6 @@ const SignUp = () => {
             <Text className="text-2xl font-semibold text-tertiary font-poppinsSemiBold">
                 Sign Up to PodCuts
             </Text>
-            
-            <FormField // Username Text Field
-              title='Username'
-              value={form.username}
-              placeholder='Enter a username'
-              handleChangeText={(e) => setForm({...form, username: e})}
-              otherStyles='mt-7'
-              startCaps={true}
-            />
 
             <FormField // Email Text Field
               title='Email'

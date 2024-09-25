@@ -37,9 +37,7 @@ const Podcast = () => {
 
     const getTrimmedUrls = async (audioUrl: string) => {
         const intervals = [
-            [0, 35],
-            [35, 100],
-            [100, 120]
+            [0, 35]
         ];
         const res = await fetch(audioUrl || "");
         const trimmedUrls = await trimAudio(res.url, intervals);
@@ -57,7 +55,8 @@ const Podcast = () => {
                 loading: true,
                 ...episodeData
             });
-            const transcript = await transcribeUrl(episodeData.audioUrl);
+            const deepgramResult = await transcribeUrl(episodeData.audioUrl);
+            const transcript = deepgramResult.results.channels[0].alternatives[0].transcript
             const trimmedUrls = await getTrimmedUrls(episodeData.audioUrl);
             const docRef = await setDoc(doc(episodesCollectionRef, episodeData.title), {
                 podcastName: podcastName,
