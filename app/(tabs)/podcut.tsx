@@ -9,6 +9,7 @@ import { collection, doc, getDoc } from 'firebase/firestore';
 import { UserContext } from '../context';
 import { db } from '../firebase';
 import { segment } from '../../functions/segment.js'
+import RNFS from 'react-native-fs';
 
 const PodCut = () => {
     const handleGoBack = () => {router.back()}
@@ -18,27 +19,6 @@ const PodCut = () => {
     }>()
     const playbackState = usePlaybackState(); const currentTrack = useActiveTrack();
 
-    function extractStartEndTimes(url: string): [number | null, number | null] {
-        try {
-          const parts = url.split('!');
-          if (parts.length < 2) {throw new Error('Invalid URL format');}
-          const paramString = parts[1];
-      
-          const params = new URLSearchParams(paramString);
-      
-          const startTime = params.get('ts');
-          const endTime = params.get('te');
-      
-          // Convert to numbers, or null if not present
-          const start = startTime ? parseInt(startTime, 10) : null;
-          const end = endTime ? parseInt(endTime, 10) : null;
-      
-          return [start, end];
-        } catch (error) {
-          console.error('Error parsing URL:', error);
-          return [null, null];
-        }
-    }
 
     const addTrimmedUrls = async () => {
         const usersDocRef = doc(db, 'users', user?.uid || '');
@@ -47,18 +27,19 @@ const PodCut = () => {
         const docSnap = await getDoc(episodeDocRef);
         if (docSnap.exists()) {
             //const trimmedUrls = docSnap.data().trimmedUrls.map((topic: any) => topic.trimmedUrl);
-            const trimmedUrls = docSnap.data().trimmedUrls;
+            const trimmedUrls: string[] = docSnap.data().trimmedUrls;
+            const modifiedUrls = trimmedUrls.map(url => `${url}`);
             //const topicNames = docSnap.data().topics.map((topic: any) => topic.topicName);
             const topicNames = ["Intro", "Sponsor: Spotify", "Sponsor: AG1", "Welcome to guest Dr. Stuart McGill", "Anatomy of the Back", "The Mcgill Big 3", "Best excersizes for back pain", "Research on average life expectancy", "The 3 most important things for back health", "Outro"];
             let index = 0;
-            for (const url of trimmedUrls) {
-                const [start, end] = extractStartEndTimes(url);
+            for (const url of modifiedUrls) {
+
                 await TrackPlayer.add({
                     id: index,
                     url: url,
                     title: topicNames[index],
                     artist: podcastName,
-                    duration: (end || 10) - (start || 0),
+                    duration: 10,
                     artwork: image || "",
                 });
                 index++;
