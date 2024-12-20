@@ -8,7 +8,7 @@ import FloatingPlayer from './floatingPlayer';
 import { collection, doc, getDoc } from 'firebase/firestore';
 import { UserContext } from '../context';
 import { db } from '../firebase';
-import { main } from '../../functions/segment.js'
+import { segment } from '../../functions/segment.js'
 
 const PodCut = () => {
     const handleGoBack = () => {router.back()}
@@ -46,14 +46,17 @@ const PodCut = () => {
         const episodeDocRef = doc(episodesCollectionRef, id);
         const docSnap = await getDoc(episodeDocRef);
         if (docSnap.exists()) {
+            //const trimmedUrls = docSnap.data().trimmedUrls.map((topic: any) => topic.trimmedUrl);
             const trimmedUrls = docSnap.data().trimmedUrls;
+            //const topicNames = docSnap.data().topics.map((topic: any) => topic.topicName);
+            const topicNames = ["Intro", "Sponsor: Spotify", "Sponsor: AG1", "Welcome to guest Dr. Stuart McGill", "Anatomy of the Back", "The Mcgill Big 3", "Best excersizes for back pain", "Research on average life expectancy", "The 3 most important things for back health", "Outro"];
             let index = 0;
             for (const url of trimmedUrls) {
                 const [start, end] = extractStartEndTimes(url);
                 await TrackPlayer.add({
                     id: index,
                     url: url,
-                    title: title,
+                    title: topicNames[index],
                     artist: podcastName,
                     duration: (end || 10) - (start || 0),
                     artwork: image || "",
@@ -73,7 +76,7 @@ const PodCut = () => {
     }
 
     // useEffect(() => {
-    //     main(transcript);
+    //     segment(transcript);
     // }, [])
 
     const cuts = [

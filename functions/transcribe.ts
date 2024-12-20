@@ -20,14 +20,22 @@ export const transcribeUrl = async (audioUrl: string) => {
   if (error) throw error;
   // STEP 4: Print the results
 
-
   if (!error) {
-    console.dir(result, { depth: null });
-    return result;
+    console.dir(result.results.channels[0].alternatives[0].paragraphs.paragraphs, { depth: null });
+    const extractedData: Map<any,any> = new Map(
+      (result as any).results.channels[0].alternatives[0].paragraphs.paragraphs.flatMap((item: any) =>
+        item.sentences.map((sentence: any) => [sentence.text, sentence.start])
+      )
+    );
+    
+    console.log(extractedData); // the map of sentence to time
+    
+    return {result, extractedData}; 
   }
 };
 
 
+//transcribeUrl("https://dts.podtrac.com/redirect.mp3/pscrb.fm/rss/p/traffic.libsyn.com/secure/5minute/Podcast_-_Galileo_Galilei.mp3?dest-id=208105");
 // transcript:result.results.channels[0].alternatives[0].transcript
 // sentences: result.results.channels[0].alternatives[0].paragraphs.paragraphs
 

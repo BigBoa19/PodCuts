@@ -3,11 +3,12 @@ import React from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import icons from '@/constants/icons';
 import getPodcastEpisodes from '@/functions/rssParsing';
-import { addDoc, collection, doc, setDoc } from 'firebase/firestore'; import { db } from '../firebase';
+import { collection, doc, setDoc } from 'firebase/firestore'; import { db } from '../firebase';
 import { UserContext } from '../context';
 import { transcribeUrl } from '@/functions/transcribe';
 import { trimAudio } from '@/functions/trimAudio';
-import { load } from 'react-native-track-player/lib/src/trackPlayer';
+import { segment } from '@/functions/segment';
+import { callTrimAudioEndpoint } from '@/functions/newTrimAudio';
 
 interface PodcastEpisode {
     title: string;
@@ -33,12 +34,15 @@ const Podcast = () => {
         getEpisodes();
     }, [feedUrl])
 
-    const limitedEpisodes = episodes.slice(0, 5);
+    const limitedEpisodes = episodes.slice(0, 10);
 
-    const getTrimmedUrls = async (audioUrl: string) => {
-        const intervals = [
-            [0, 35]
-        ];
+    const getTrimmedUrls = async (audioUrl: string, startingTimes: number[]) => {
+        const intervals: number[][] = [];
+        for (let i = 0; i < startingTimes.length - 1; i++){
+            intervals.push([startingTimes[i], startingTimes[i+1]]);   
+        }
+        console.log(intervals);
+        const intervalsTest = [[210.7, 264.65], [264.65, 473.32]];
         const res = await fetch(audioUrl || "");
         const trimmedUrls = await trimAudio(res.url, intervals);
         return trimmedUrls;
@@ -55,15 +59,56 @@ const Podcast = () => {
                 loading: true,
                 ...episodeData
             });
-            const deepgramResult = await transcribeUrl(episodeData.audioUrl);
-            const transcript = deepgramResult.results.channels[0].alternatives[0].transcript
-            const trimmedUrls = await getTrimmedUrls(episodeData.audioUrl);
-            const docRef = await setDoc(doc(episodesCollectionRef, episodeData.title), {
-                podcastName: podcastName,
-                image: image,
+            const deepgramResult = await transcribeUrl(episodeData.audioUrl); //getting transcript and map of sentences
+            const transcript = deepgramResult?.result.results.channels[0].alternatives[0].transcript //transcript
+            const deepgramMap = deepgramResult?.extractedData; //map of sentences to time
+
+            const segmentResult = await segment(transcript); //getting topic and starting sentences
+            const startingSentences = segmentResult?.starting_sentences; //starting sentences
+            const topicNames = segmentResult?.topics; //topics
+            const notes = segmentResult?.notes; //notes
+            const startingTimes: number[] = [];
+            if(startingSentences){
+                for (const startingSentence of startingSentences){
+                    if(startingSentence.split('.').length - 1 === 1){
+                        startingTimes.push(deepgramMap?.get(startingSentence) ? deepgramMap?.get(startingSentence) : -1);
+                    }
+                    else {
+                        const splitSentences = startingSentence.split('.');
+                        let time = 0;
+                        for (const sentence of splitSentences){
+                            time = deepgramMap?.get(sentence) ? deepgramMap?.get(sentence) : -1;
+                            if(time !== -1){
+                                startingTimes.push(time);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            const roundedStartingTimes = startingTimes.map(time => Math.round(time * 100) / 100);
+
+            console.log(topicNames);
+            console.log(startingSentences);
+            console.log(roundedStartingTimes);
+            
+            //const trimmedUrls = await getTrimmedUrls(episodeData.audioUrl, roundedStartingTimes);
+            const trimmedUrls = await callTrimAudioEndpoint();
+            const combinedArray = topicNames?.map((topicName, index) => {
+                return {
+                    topicName: topicName,
+                    trimmedUrl: trimmedUrls ? trimmedUrls[index] : undefined,
+                    notes: notes ? notes[index] : ''
+                };
+            });
+            await setDoc(doc(episodesCollectionRef, episodeData.title), {
+                podcastName: podcastName || null,
+                image: image || null,
                 loading: false,
-                transcript: transcript,
-                trimmedUrls: trimmedUrls,
+                // transcript: transcript || null,
+                // topics: combinedArray || [],
+                trimmedUrls: trimmedUrls || [],
+                notes: notes || null,
                 ...episodeData
             });
             console.log("Document written with ID: ", episodeData.title);

@@ -49,13 +49,3 @@ export default async function getPodcastEpisodes(feedUrl: string): Promise<Podca
     return [];
   }
 }
-
-// Usage example (to be placed in a React component)
-// useEffect(() => {
-//   getPodcastEpisodes(feedUrl).then(episodes => {
-//     if (episodes.length > 0) {
-//       console.log('Fetched episodes:', episodes);
-//       // Use the episodes here, e.g., set them in state
-//     }
-//   });
-// }, []);
