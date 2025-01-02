@@ -86,7 +86,7 @@ const Pods = () => {
       {/* Navigation/Title */}
       <View className='flex-row justify-between items-center pt-4'>
         <View className='flex-row items-center justify-between px-3 py-1'>
-          <Text className="text-tertiary text-2xl font-poppinsBold">Your PodCuts</Text>
+          <Text className="text-tertiary text-2xl font-poppinsBold">Your PodCuts!</Text>
           <TouchableOpacity onPress={handleNavigateAdd} className='px-1'>
             <Image source={icons.plus} resizeMode='contain' className='w-[22px] h-[22px]' style={{tintColor: '#2e2a72'}} />
           </TouchableOpacity>
