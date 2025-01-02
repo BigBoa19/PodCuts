@@ -50,7 +50,7 @@ export async function segment(transcript) {
   }
 }*/
 
-import OpenAI from "openai";
+import OpenAI from "openai"; //comment
 
 const openai = new OpenAI({apiKey: process.env.EXPO_PUBLIC_OPEN_AI_KEY});
 
