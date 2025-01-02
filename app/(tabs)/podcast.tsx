@@ -6,7 +6,6 @@ import getPodcastEpisodes from '@/functions/rssParsing';
 import { collection, doc, setDoc } from 'firebase/firestore'; import { db } from '../firebase';
 import { UserContext } from '../context';
 import { transcribeUrl } from '@/functions/transcribe';
-import { trimAudio } from '@/functions/trimAudio';
 import { segment } from '@/functions/segment';
 import { callTrimAudioEndpoint } from '@/functions/newTrimAudio';
 
@@ -57,7 +56,7 @@ const Podcast = () => {
             const startingTimes: number[] = [];
             if(startingSentences){
                 for (const startingSentence of startingSentences){
-                    if(startingSentence.split('.').length - 1 === 1){
+                    if(startingSentence.split('.').length - 1 === 1){ //if startingSentence only has one sentence
                         startingTimes.push(deepgramMap?.get(startingSentence) ? deepgramMap?.get(startingSentence) : -1);
                     }
                     else {
