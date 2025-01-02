@@ -4,9 +4,12 @@
     "promptToConfigurePushNotifications": false
   },
   "build": {
-    "development": {
+    "development-simulator": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      }
     },
     "preview": {
       "distribution": "internal",
@@ -20,6 +23,7 @@
       }
     }
   },
+  
   "submit": {
     "production": {}
   }
