@@ -34,20 +34,7 @@ const Podcast = () => {
         getEpisodes();
     }, [feedUrl])
 
-    const limitedEpisodes = episodes.slice(0, 10);
-
-    const getTrimmedUrls = async (audioUrl: string, startingTimes: number[]) => {
-        const intervals: number[][] = [];
-        for (let i = 0; i < startingTimes.length - 1; i++){
-            intervals.push([startingTimes[i], startingTimes[i+1]]);   
-        }
-        console.log(intervals);
-        const intervalsTest = [[210.7, 264.65], [264.65, 473.32]];
-        const res = await fetch(audioUrl || "");
-        const trimmedUrls = await trimAudio(res.url, intervals);
-        return trimmedUrls;
-    }
-
+    const limitedEpisodes = episodes.slice(0, 20);
     const addEpisodeTodb = async (episodeData: PodcastEpisode) => {
         try {
             router.push("/pods");
@@ -93,7 +80,7 @@ const Podcast = () => {
             console.log(roundedStartingTimes);
             
             //const trimmedUrls = await getTrimmedUrls(episodeData.audioUrl, roundedStartingTimes);
-            const trimmedUrls = await callTrimAudioEndpoint();
+            const trimmedUrls = await callTrimAudioEndpoint(episodeData.audioUrl, []);
             const combinedArray = topicNames?.map((topicName, index) => {
                 return {
                     topicName: topicName,
@@ -105,10 +92,10 @@ const Podcast = () => {
                 podcastName: podcastName || null,
                 image: image || null,
                 loading: false,
-                // transcript: transcript || null,
+                transcript: transcript || null,
                 // topics: combinedArray || [],
                 trimmedUrls: trimmedUrls || [],
-                notes: notes || null,
+                //notes: notes || null,
                 ...episodeData
             });
             console.log("Document written with ID: ", episodeData.title);
@@ -117,6 +104,7 @@ const Podcast = () => {
             console.error("Error adding document: ", error);
         }
     }
+
 
     return (
         <SafeAreaView className='bg-secondary h-full'>
