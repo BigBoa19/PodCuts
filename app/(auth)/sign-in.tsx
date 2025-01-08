@@ -12,7 +12,6 @@ const SignIn = () => {
   const userData = React.useContext(UserContext);
   const [request, response, promptAsync] = Google.useAuthRequest({
     iosClientId: '460321896686-ttu39rq7iq33jcjc667fijdnb1dheda8.apps.googleusercontent.com'
-    //////////////460321896686-ttu39rq7iq33jcjc667fijdnb1dheda8.apps.googleusercontent.com
   });
 
   const addUserToDatabase = async (user: User) => {

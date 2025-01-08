@@ -5,4 +5,4 @@ type UserContextType = {
     user: User | null;
 };
 
-export const UserContext = createContext<UserContextType>({user: null });
+export const UserContext = createContext<UserContextType>({ user: null });
