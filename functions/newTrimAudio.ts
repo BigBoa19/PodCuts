@@ -8,7 +8,7 @@ export async function callTrimAudioEndpoint(audio_uri: string, intervals: number
     };
     const trimmedAudio: string[] = [];
     try {
-        const response = await fetch("http://172.29.59.146:8000/trim_audio", {
+        const response = await fetch("https://trimaudioffmpeg-1020694297411.us-central1.run.app/trim_audio", {
             method: "POST",
             body: JSON.stringify(payload),
             headers: {

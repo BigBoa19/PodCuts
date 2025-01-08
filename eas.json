@@ -4,7 +4,7 @@
     "promptToConfigurePushNotifications": false
   },
   "build": {
-    "development-simulator": {
+    "development": {
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
