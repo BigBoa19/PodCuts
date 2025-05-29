@@ -34,7 +34,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>exp+podcuts</string>
+          <string>exp+reactnativetest-app</string>
         </array>
       </dict>
     </array>
