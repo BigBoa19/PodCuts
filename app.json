@@ -13,8 +13,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.bigboa19.podcuts",
+      "supportsTablet": false,
+      "bundleIdentifier": "com.ncdev19.podcuts",
       "infoPlist": {
         "UIBackgroundModes": [
           "audio"
