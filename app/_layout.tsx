@@ -1,6 +1,6 @@
 import React from 'react';
 import { SplashScreen, Stack } from 'expo-router'; import { useFonts } from 'expo-font';
-import useUserData from '../functions/useUserData'; import { UserContext } from './context';
+import useUserData from '../services/useUserData'; import { UserContext } from './context';
 import TrackPlayer from 'react-native-track-player';
 
 SplashScreen.preventAutoHideAsync();

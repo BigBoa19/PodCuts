@@ -2,12 +2,10 @@ import { View, Text, SafeAreaView, TouchableOpacity, Image, FlatList } from 'rea
 import React from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import icons from '@/constants/icons';
-import getPodcastEpisodes from '@/functions/rssParsing';
+import getPodcastEpisodes from '@/services/rssParsing';
 import { collection, doc, setDoc } from 'firebase/firestore'; import { db } from '../firebase';
 import { UserContext } from '../context';
-import { transcribeUrl } from '@/functions/transcribe';
-import { segment } from '@/functions/segment';
-import { callTrimAudioEndpoint } from '@/functions/newTrimAudio';
+import { segment } from '@/services/segment';
 
 interface PodcastEpisode {
     title: string;
@@ -45,60 +43,7 @@ const Podcast = () => {
                 loading: true,
                 ...episodeData
             });
-            const deepgramResult = await transcribeUrl(episodeData.audioUrl); //getting transcript and map of sentences
-            const transcript = deepgramResult?.result.results.channels[0].alternatives[0].transcript //transcript
-            const deepgramMap = deepgramResult?.extractedData; //map of sentences to time
-
-            const segmentResult = await segment(transcript); //getting topic and starting sentences
-            const startingSentences = segmentResult?.starting_sentences; //starting sentences
-            const topicNames = segmentResult?.topics; //topics
-            const notes = segmentResult?.notes; //notes
-            const startingTimes: number[] = [];
-            if(startingSentences){
-                for (const startingSentence of startingSentences){
-                    if(startingSentence.split('.').length - 1 === 1){ //if startingSentence only has one sentence
-                        startingTimes.push(deepgramMap?.get(startingSentence) ? deepgramMap?.get(startingSentence) : -1);
-                    }
-                    else {
-                        const splitSentences = startingSentence.split('.');
-                        let time = 0;
-                        for (const sentence of splitSentences){
-                            time = deepgramMap?.get(sentence) ? deepgramMap?.get(sentence) : -1;
-                            if(time !== -1){
-                                startingTimes.push(time);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            const roundedStartingTimes = startingTimes.map(time => Math.round(time * 100) / 100);
-
-            console.log(topicNames);
-            console.log(startingSentences);
-            console.log(roundedStartingTimes);
-            
-            //const trimmedUrls = await getTrimmedUrls(episodeData.audioUrl, roundedStartingTimes);
-            const trimmedUrls = await callTrimAudioEndpoint(episodeData.audioUrl, []);
-            const combinedArray = topicNames?.map((topicName, index) => {
-                return {
-                    topicName: topicName,
-                    trimmedUrl: trimmedUrls ? trimmedUrls[index] : undefined,
-                    notes: notes ? notes[index] : ''
-                };
-            });
-            await setDoc(doc(episodesCollectionRef, episodeData.title), {
-                podcastName: podcastName || null,
-                image: image || null,
-                loading: false,
-                transcript: transcript || null,
-                // topics: combinedArray || [],
-                trimmedUrls: trimmedUrls || [],
-                //notes: notes || null,
-                ...episodeData
-            });
             console.log("Document written with ID: ", episodeData.title);
-            
         } catch (error) {
             console.error("Error adding document: ", error);
         }

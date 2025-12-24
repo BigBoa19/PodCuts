@@ -1,6 +1,6 @@
 import { View, Text, SafeAreaView, TouchableOpacity, FlatList, Image, ActivityIndicator } from 'react-native';
 import React from 'react'
-import fetchPodcastData from '@/functions/fetchPodcastData';
+import fetchPodcastData from '@/services/fetchPodcastData';
 import icons from '@/constants/icons';
 import { router } from 'expo-router';
 import FormField from '../components/FormField';

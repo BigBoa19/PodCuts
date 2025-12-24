@@ -8,8 +8,6 @@ import FloatingPlayer from './floatingPlayer';
 import { collection, doc, getDoc } from 'firebase/firestore';
 import { UserContext } from '../context';
 import { db } from '../firebase';
-import { segment } from '../../functions/segment.js'
-import RNFS from 'react-native-fs';
 
 const PodCut = () => {
     const handleGoBack = () => {router.back()}

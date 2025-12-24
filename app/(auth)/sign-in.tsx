@@ -69,7 +69,7 @@ const SignIn = () => {
             className='w-[240px] h-[100px] object-center mx-auto'
           />
 
-          <Text className="text-2xl font-semibold text-tertiary font-poppinsSemiBold">
+          <Text className="text-4xl font-semibold text-tertiary font-poppinsBold">
               Log In to PodCuts
           </Text>
           {/* Email Text Field */}
