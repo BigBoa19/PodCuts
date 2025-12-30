@@ -67,16 +67,23 @@ const Podcast = () => {
             const episodesCollectionRef = collection(usersDocRef, 'episodes');
             const episodeDocRef = doc(episodesCollectionRef, episodeId);
 
-            const [summaryData, chaptersData] = await Promise.all([
-                summarize(transcript),
-                chapterize(sentences, transcript)
-            ]);
+            // Update summary as soon as it's ready
+            summarize(transcript).then(async (summaryData) => {
+                if (summaryData) {
+                    await updateDoc(episodeDocRef, { summary: summaryData });
+                }
+            }).catch((error) => {
+                console.error("Error summarizing: ", error);
+            });
 
-            const updateData: any = {};
-            if (summaryData) updateData.summary = summaryData;
-            if (chaptersData) updateData.chapters = chaptersData;
-
-            await updateDoc(episodeDocRef, updateData);
+            // Update chapters as soon as they're ready
+            chapterize(sentences, transcript).then(async (chaptersData) => {
+                if (chaptersData) {
+                    await updateDoc(episodeDocRef, { chapters: chaptersData });
+                }
+            }).catch((error) => {
+                console.error("Error chapterizing: ", error);
+            });
         } catch (error) {
             console.error("Error processing remaining data: ", error);
         }
