@@ -1,20 +1,22 @@
 import { View, Text, SafeAreaView, TouchableOpacity, FlatList, Image, ActivityIndicator } from 'react-native';
 import React from 'react'
-import fetchPodcastData from '@/services/fetchPodcastData';
+import searchPodcasts from '@/services/searchPodcasts';
 import icons from '@/constants/icons';
 import { router } from 'expo-router';
 import FormField from '../components/FormField';
+import { Podcast } from '@/services/searchPodcasts';
 
 const Add = () => {
     const [searchTerm, setSearchTerm] = React.useState('');
-    const [podcasts, setPodcasts] = React.useState<any[]>([]);
+    const [podcasts, setPodcasts] = React.useState<Podcast[]>([]);
     const [isLoading, setIsLoading] = React.useState(false);
 
     const handleGoBack = () => {router.back()}
 
     const getPodcasts = async () => {
         setIsLoading(true);
-        setPodcasts(await fetchPodcastData(searchTerm));
+        const podcasts = await searchPodcasts(searchTerm);
+        setPodcasts(podcasts);
         setIsLoading(false);
     }
 
@@ -47,7 +49,7 @@ const Add = () => {
             {isLoading ? <ActivityIndicator size="large" color="#2e2a72" className='p-3'/> :
                 <FlatList className='px-2'
                     data={podcasts}
-                    keyExtractor={(item) => item.trackId.toString()}
+                    keyExtractor={(item) => item.id.toString()}
                     renderItem={({ item }) => (
                     <View>
                         <PodcastCard item={item} />
@@ -59,16 +61,16 @@ const Add = () => {
     )
 }
 
-const PodcastCard = ({ item }: { item: any }) => {
+const PodcastCard = ({ item }: { item: Podcast }) => {
     return (
-      <TouchableOpacity key={item.trackId} className="my-1 flex-row items-center space-x-4 p-0.5 border-2 border-gray-200 rounded-lg bg-secondary shadow-lg"
+      <TouchableOpacity key={item.id} className="my-1 flex-row items-center space-x-4 p-0.5 border-2 border-gray-200 rounded-lg bg-secondary shadow-lg"
       onPress={() => {
         router.push({
           pathname: "/podcast",
-          params: { id: item.trackId, image: item.artworkUrl600, podcastName: item.trackName, feedUrl: item.feedUrl}})}}>
-        <Image source={{ uri: item.artworkUrl600 }} className="w-[72px] h-[72px] rounded-lg" />
+          params: { id: item.id, image: item.image, podcastName: item.title, description: item.description, author: item.author }})}}>
+        <Image source={{ uri: item.image }} className="w-[72px] h-[72px] rounded-lg" />
         <View className='flex-1 justify-center'>
-          <Text className="text-sm font-poppinsSemiBold flex-shrink text-tertiary" numberOfLines={2} ellipsizeMode="tail">{item.trackName}</Text>
+          <Text className="text-sm font-poppinsSemiBold flex-shrink text-tertiary" numberOfLines={2} ellipsizeMode="tail">{item.title}</Text>
         </View>
       </TouchableOpacity>
     );

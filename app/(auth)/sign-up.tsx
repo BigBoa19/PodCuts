@@ -24,6 +24,7 @@ const SignUp = () => {
       try {
         setDoc(usersDocRef, { email: form.email });
         alert('Sign Up Successful')
+        router.push('/pods')
       }
       catch (error: any) {
         console.log(error)

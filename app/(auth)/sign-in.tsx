@@ -34,12 +34,6 @@ const SignIn = () => {
       });
     }
   }, [response]);
-
-  React.useEffect(() => {
-    if(userData.user) {
-      router.push('/pods')
-    }
-  }, [userData.user])
   
   const [form, setForm] = React.useState({
     email: '',

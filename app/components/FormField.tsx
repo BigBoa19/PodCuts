@@ -25,6 +25,7 @@ const FormField: React.FC<FormFieldProps> = ({title, value, placeholder, handleC
           placeholder={placeholder}
           onChangeText={handleChangeText}
           placeholderTextColor='#2e2a72'
+          autoComplete='off'
           autoCapitalize={props.startCaps ? 'sentences' : 'none'}
           className='flex-1 font-psemibold text-base text-tertiary'
           secureTextEntry={title === 'Password' && !showPassword}

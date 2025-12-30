@@ -1,13 +1,13 @@
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import React from 'react';
-import TrackPlayer, { useActiveTrack, usePlaybackState, State } from 'react-native-track-player';
-import images from '@/constants/images';
+import TrackPlayer, { useActiveTrack, usePlaybackState, State, useProgress } from 'react-native-track-player';
 import icons from '@/constants/icons';
 import MovingText from '../components/MovingText';
 import { router } from 'expo-router';
 
 const FloatingPlayer = () => {
     const currentTrack = useActiveTrack(); const playbackState = usePlaybackState();
+    const { position, duration } = useProgress();
     
     const displayedTrack = currentTrack;
     // Toggle sound
@@ -21,19 +21,19 @@ const FloatingPlayer = () => {
 
     const nextSound = async () => {
         try {
-            await TrackPlayer.skipToNext();
-            await TrackPlayer.play();
+            const newPosition = Math.min(position + 15, duration);
+            await TrackPlayer.seekTo(newPosition);
         } catch (error) {
-            console.error('Failed to skip to next', error);
+            console.error('Failed to seek forward', error);
         }
     }
 
     const previousSound = async () => {
         try {
-            await TrackPlayer.skipToPrevious();
-            await TrackPlayer.play();
+            const newPosition = Math.max(position - 15, 0);
+            await TrackPlayer.seekTo(newPosition);
         } catch (error) {
-            console.error('Failed to skip to previous', error);
+            console.error('Failed to seek backward', error);
         }
     }
 
