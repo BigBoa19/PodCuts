@@ -1,4 +1,4 @@
-import logo from "../assets/images/podcuts.png";
+import logo from "../assets/images/PodCuts.png";
 import lexImage from "../assets/images/LexImage.png";
 import hubermanImage from "../assets/images/HubermanImage.png";
 import joeImage from "../assets/images/JoeImage.png";
