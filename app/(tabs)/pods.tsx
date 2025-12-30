@@ -6,6 +6,7 @@ import { router } from 'expo-router';
 import { collection, deleteDoc, doc, onSnapshot, query } from 'firebase/firestore'; import { db } from '../firebase';
 import CustomButton from '../components/CustomButton';
 import TrackPlayer from 'react-native-track-player';
+import { PodcastEpisode } from '@/services/getPodcastData';
 
 const Pods = () => { 
   const handleNavigateSettings = () => {router.push("/settings")}
@@ -56,9 +57,21 @@ const Pods = () => {
     const q = query(episodesCollectionRef);
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const episodes = querySnapshot.docs.map((doc) => ({
+      const episodesData: any = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data()
+      }));
+      const episodes: any[] = episodesData.map((episode: any) => ({
+        id: episode.id || '',
+        title: episode.title || '',
+        podcastName: episode.podcastName || '',
+        image: episode.image || null,
+        audioUrl: episode.audioUrl || '',
+        transcript: episode.transcript || null,
+        description: episode.description || '',
+        datePublished: episode.datePublished || '',
+        duration: episode.duration || 0,
+        loading: episode.loading || false,
       }));
       setPodcastEpisodes(episodes);
       setFilteredPodcastEpisodes(episodes);
@@ -84,19 +97,16 @@ const Pods = () => {
   return (
     <SafeAreaView className='flex-1 bg-secondary items-center'>
       {/* Navigation/Title */}
-      <View className='flex-row justify-between items-center pt-4'>
-        <View className='flex-row items-center justify-between px-3 py-1'>
-          <Text className="text-tertiary text-2xl font-poppinsBold">Your PodCuts!</Text>
-          <TouchableOpacity onPress={handleNavigateAdd} className='px-1'>
+      <View className='flex-row justify-between items-center pt-4 px-3 py-1 w-full'>
+        <View className='flex-row items-center flex-shrink'>
+          <Text className="text-tertiary text-2xl font-poppinsBold">Your PodCuts</Text>
+          <TouchableOpacity onPress={handleNavigateAdd} className='px-1 ml-1'>
             <Image source={icons.plus} resizeMode='contain' className='w-[22px] h-[22px]' style={{tintColor: '#2e2a72'}} />
           </TouchableOpacity>
         </View>
-          <View className='flex-row items-center justify-end'>
-            <CustomButton title="View Saved" textStyles='text-base' containerStyles='p-2' handlePress={() => {router.push("/saved")}} />
-            <TouchableOpacity onPress={handleNavigateSettings} className='p-3'>
-              <Image source={icons.settings} resizeMode='contain' className='w-[26px] h-[26px]' style={{tintColor: '#2e2a72'}} />
-            </TouchableOpacity>
-          </View>
+        <TouchableOpacity onPress={handleNavigateSettings} className='p-3 flex-shrink-0'>
+          <Image source={icons.settings} resizeMode='contain' className='w-[26px] h-[26px]' style={{tintColor: '#2e2a72'}} />
+        </TouchableOpacity>
       </View>
       {/* Search Bar */}
       <FormField
@@ -112,7 +122,7 @@ const Pods = () => {
             onPress={() => {
               if (pod.loading) return;
               router.push({
-              pathname: "/podcut",
+              pathname: '/podcut',
               params: { id: pod.id, title: pod.title, podcastName: pod.podcastName, image: pod.image, audioUrl: pod.audioUrl, transcript: pod.transcript}})}}>
               <Image source={{ uri: pod.image }} className="w-[72px] h-[72px] rounded-lg" />
               <View className='flex-1 justify-center'>
@@ -130,6 +140,7 @@ const Pods = () => {
                         title: pod.title,
                         artist: pod.podcastName,
                         artwork: pod.image || "",
+                        episodeId: pod.id,
                     });
                     TrackPlayer.play();
                   }} />

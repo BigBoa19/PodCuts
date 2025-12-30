@@ -4,11 +4,11 @@
     "slug": "reactnativetest-app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/podcuts_icon.png",
+    "icon": "./assets/images/podcuts.png",
     "scheme": "myappscheme",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/podcuts_icon.png",
+      "image": "./assets/images/podcuts.png",
       "resizeMode": "contain",
       "backgroundColor": "#D3C5E5"
     },
@@ -23,7 +23,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/podcuts_icon.png",
+        "foregroundImage": "./assets/images/podcuts.png",
         "backgroundColor": "#D3C5E5"
       },
       "package": "com.bigboa19.podcuts"

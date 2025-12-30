@@ -46,7 +46,6 @@ const Settings = () => {
       <CustomButton title="Get Unlimited PodCuts" handlePress={() => {}} containerStyles='p-3 mx-2 bg-[#b35ad6]' textStyles='text-2xl font-poppinsBold text-tertiary'/>
       <Text className="text-tertiary font-poppinsBold text-2xl py-2 mx-auto">Account</Text>
       <Text className="text-tertiary font-poppinsBold text-base mx-auto">Email:  {user?.email}</Text>
-      <Text className="text-tertiary font-poppinsBold text-base mx-auto">Name:  {user?.displayName}</Text>
       <View className="flex-row justify-center">
         <CustomButton title="Sign Out" handlePress={showSignOutAlert} containerStyles='p-3 mx-2' textStyles='text-base'/>
         <CustomButton title="Delete Account" handlePress={() => {}} containerStyles='p-3' textStyles='text-base'/>

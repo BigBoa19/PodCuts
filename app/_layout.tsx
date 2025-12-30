@@ -1,11 +1,33 @@
 import React from 'react';
 import { SplashScreen, Stack } from 'expo-router'; import { useFonts } from 'expo-font';
 import useUserData from '../services/useUserData'; import { UserContext } from './context';
-import TrackPlayer from 'react-native-track-player';
+import TrackPlayer, { Event } from 'react-native-track-player';
 
 SplashScreen.preventAutoHideAsync();
 
-TrackPlayer.registerPlaybackService(() => require('./service'));
+TrackPlayer.registerPlaybackService(() => async () => {
+  TrackPlayer.addEventListener(Event.RemotePlay, () => TrackPlayer.play());
+  TrackPlayer.addEventListener(Event.RemotePause, () => TrackPlayer.pause());
+  TrackPlayer.addEventListener(Event.RemoteJumpForward, async () => {
+    try {
+      const position = await TrackPlayer.getPosition();
+      const duration = await TrackPlayer.getDuration();
+      const newPosition = Math.min(position + 15, duration);
+      await TrackPlayer.seekTo(newPosition);
+    } catch (error) {
+      console.error('Failed to seek forward', error);
+    }
+  });
+  TrackPlayer.addEventListener(Event.RemoteJumpBackward, async () => {
+    try {
+      const position = await TrackPlayer.getPosition();
+      const newPosition = Math.max(position - 15, 0);
+      await TrackPlayer.seekTo(newPosition);
+    } catch (error) {
+      console.error('Failed to seek backward', error);
+    }
+  });
+});
 
 const RootLayout = () => {
   const userData = useUserData();
