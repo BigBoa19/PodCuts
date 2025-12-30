@@ -1,12 +1,11 @@
 import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native'
 import React from 'react';
-import icons from '@/constants/icons';
 import TrackPlayer, { useProgress, useActiveTrack, usePlaybackState, State } from 'react-native-track-player';
 import Slider from '@react-native-community/slider';
+import { AntDesign, FontAwesome, FontAwesome5 } from '@expo/vector-icons';
 import { collection, doc, onSnapshot } from 'firebase/firestore';
 import { UserContext } from '../context';
 import { db } from '../firebase';
-import CustomButton from '../components/CustomButton';
 
 const Player = () => {
     const { position, duration } = useProgress();
@@ -17,6 +16,8 @@ const Player = () => {
     const [episodeData, setEpisodeData] = React.useState<{
         chapters: any[] | null;
     }>({ chapters: null });
+    
+    const [expandedNotesIndex, setExpandedNotesIndex] = React.useState<number | null>(null)
     
     // Get episode ID from track metadata
     const episodeId = (currentTrack as any)?.episodeId;
@@ -63,6 +64,10 @@ const Player = () => {
         } catch (error) {
             console.error('Failed to seek to chapter:', error);
         }
+    }
+    
+    const showNotesDropdown = (index: number) => {
+        setExpandedNotesIndex(expandedNotesIndex === index ? null : index);
     }
     
     // Fetch chapters from Firestore
@@ -123,13 +128,13 @@ const Player = () => {
                     </View>
                     <View className='flex-row items-center'>
                         <TouchableOpacity onPress={skipBackward} className='p-3'>
-                            <Image source={icons.previous} resizeMode='contain' className='w-[50px] h-[50px]' tintColor={"#2e2a72"} />
+                            <FontAwesome5 name="backward" size={36} color="#2e2a72" />
                         </TouchableOpacity>
                         <TouchableOpacity onPress={toggleSound} className='p-3'>
-                            <Image source={(playbackState.state === State.Playing) ? icons.pause : icons.play} resizeMode='contain' className='w-[70px] h-[70px]' tintColor={"#2e2a72"} />
+                            {(playbackState.state === State.Playing) ? <FontAwesome name="pause" size={48} color="#2e2a72" /> : <FontAwesome name="play" size={48} color="#2e2a72" />}
                         </TouchableOpacity>
                         <TouchableOpacity onPress={skipForward} className='p-3'>
-                            <Image source={icons.next} resizeMode='contain' className='w-[50px] h-[50px]' tintColor={"#2e2a72"} />
+                            <FontAwesome5 name="forward" size={36} color="#2e2a72" />
                         </TouchableOpacity>
                     </View>
                     
@@ -138,19 +143,32 @@ const Player = () => {
                         <View className='px-4 py-3 pb-32 w-full'>
                             <Text className='text-tertiary text-2xl font-poppinsBold mb-3'>Cuts</Text>
                             {cuts.map((cut, index) => (
-                                <TouchableOpacity 
-                                    key={index} 
-                                    className="my-1 border-2 border-gray-200 rounded-lg bg-secondary shadow-lg"
-                                    onPress={() => seekToChapter(cut.start)}
-                                >
+                                <View key={index} className="my-1">
+                                    <View className="border-2 border-gray-200 rounded-lg bg-secondary shadow-lg">
                                         <View className='flex-row justify-between w-full items-center p-1'>
-                                        <Text numberOfLines={1} className="text-base font-poppinsSemiBold flex-shrink text-tertiary p-2">{cut.title}</Text>
-                                        <View className='flex-row justify-end items-center'>
-                                            <Text className="text-sm font-poppinsRegular flex-shrink text-tertiary p-2">{formatChapterTime(cut.start)}</Text>
-                                            <CustomButton title="Notes" containerStyles='p-2' textStyles='text-base' handlePress={() => {}} />
+                                            <TouchableOpacity 
+                                                onPress={() => seekToChapter(cut.start)}
+                                                className='flex-1'
+                                            >
+                                                <Text numberOfLines={1} className="text-base font-poppinsSemiBold flex-shrink text-tertiary p-2">{cut.title}</Text>
+                                            </TouchableOpacity>
+                                            <View className='flex-row justify-end items-center'>
+                                                <Text className="text-sm font-poppinsRegular flex-shrink text-tertiary p-2">{formatChapterTime(cut.start)}</Text>
+                                                <TouchableOpacity 
+                                                    onPress={() => showNotesDropdown(index)}
+                                                    className='p-2'
+                                                >
+                                                    <Text className='text-[#2e2a72] font-poppinsSemiBold text-base'>Notes</Text>
+                                                </TouchableOpacity>
+                                            </View>
                                         </View>
                                     </View>
-                                </TouchableOpacity>
+                                    {expandedNotesIndex === index && cut.summary && (
+                                        <View className='mt-1 border-2 border-gray-200 rounded-lg bg-secondary p-4'>
+                                            <Text className='text-tertiary font-poppinsRegular text-base'>{cut.summary}</Text>
+                                        </View>
+                                    )}
+                                </View>
                             ))}
                         </View>
                     )}

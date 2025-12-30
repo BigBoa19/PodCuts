@@ -1,7 +1,7 @@
 import { View, Text, SafeAreaView, TouchableOpacity, FlatList, Image, ActivityIndicator } from 'react-native';
 import React from 'react'
 import searchPodcasts from '@/services/searchPodcasts';
-import icons from '@/constants/icons';
+import { AntDesign, Feather, EvilIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import FormField from '../components/FormField';
 import { Podcast } from '@/services/searchPodcasts';
@@ -25,7 +25,7 @@ const Add = () => {
             {/* Back Button */}
             <View className='flex-row items-center justify-between pt-2'>
                 <TouchableOpacity onPress={handleGoBack} className='px-4 absolute pt-2'>
-                    <Image source={icons.leftArrow} resizeMode='contain' className='w-[20px] h-[20px]' tintColor={"#2e2a72"} />
+                    <AntDesign name="arrowleft" size={24} color="#2e2a72" />
                 </TouchableOpacity>
                 <Text className="text-2xl text-tertiary font-poppinsBold mx-auto py-2">Add Podcasts</Text>
             </View>
@@ -33,16 +33,17 @@ const Add = () => {
             {/* Title */}
             
             {/* Search Bar */}
-            <View className='px-1 flex-row justify-end items-center'>
+            <View className='px-1 flex-row justify-end items-center relative'>
                 <FormField
                     value={searchTerm}
                     placeholder='Search for Podcasts'
                     handleChangeText={(e) => setSearchTerm(e)}
                     otherStyles='mt-2 w-full relative'
                     startCaps={true}
+                    onSubmitEditing={getPodcasts}
                 />
-                <TouchableOpacity onPress={() => {getPodcasts()}} className='absolute'>
-                    <Image source={icons.search} resizeMode='contain' className='w-5 h-5 mt-2 right-5' tintColor={"#2e2a72"}/>
+                <TouchableOpacity onPress={() => {getPodcasts()}} className='absolute right-4 top-6'>
+                    <EvilIcons name="search" size={36} color="#2e2a72" />
                 </TouchableOpacity>
             </View>
             {/* List of Podcasts */}
@@ -67,7 +68,16 @@ const PodcastCard = ({ item }: { item: Podcast }) => {
       onPress={() => {
         router.push({
           pathname: "/podcast",
-          params: { id: item.id, image: item.image, podcastName: item.title, description: item.description, author: item.author }})}}>
+          params: { 
+            id: item.id, 
+            image: item.image, 
+            podcastName: item.title, 
+            description: item.description, 
+            author: item.author,
+            episodeCount: item.episodeCount?.toString() || '',
+            category: item.category || '',
+            newestItemPubdate: item.newestItemPubdate?.toString() || ''
+          }})}}>
         <Image source={{ uri: item.image }} className="w-[72px] h-[72px] rounded-lg" />
         <View className='flex-1 justify-center'>
           <Text className="text-sm font-poppinsSemiBold flex-shrink text-tertiary" numberOfLines={2} ellipsizeMode="tail">{item.title}</Text>

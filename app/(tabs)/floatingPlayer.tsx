@@ -1,7 +1,8 @@
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import React from 'react';
 import TrackPlayer, { useActiveTrack, usePlaybackState, State, useProgress } from 'react-native-track-player';
-import icons from '@/constants/icons';
+import Slider from '@react-native-community/slider';
+import { AntDesign, FontAwesome, FontAwesome5 } from '@expo/vector-icons';
 import MovingText from '../components/MovingText';
 import { router } from 'expo-router';
 
@@ -37,25 +38,81 @@ const FloatingPlayer = () => {
         }
     }
 
+    const seekSound = async (seconds: number) => {
+        try {
+            TrackPlayer.seekTo(seconds);
+        } catch (error) {
+            console.error('Failed to seek sound', error);
+        }
+    }
+
+    // Convert seconds to MM:SS
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
     return (
-        <TouchableOpacity className='absolute bottom-4 left-2 right-2 h-[80px]' onPress={() => router.push("/player")}>
-            <View className="bg-secondary border-2 border-primary rounded-2xl shadow-lg p-0.5 flex-row items-center">
-                <Image source={ {uri: (displayedTrack ? displayedTrack.artwork : "https://fastly.picsum.photos/id/524/200/300.jpg?hmac=_0B_jkz8dRd5eIQz0xIlicLaZZnzpRdAH72crtCVvOU")}} className="w-14 h-14 rounded-full"/>
-                <View className="p-2 flex-1 overflow-hidden">
-                    <MovingText text={displayedTrack ? displayedTrack.title || "" : "Not Playing"} animationThreshold={16} style="text-lg text-tertiary font-poppinsSemiBold" />
-                    <Text numberOfLines={1} className="text-sm text-tertiary font-poppinsRegular">{displayedTrack ? displayedTrack.artist : "Not Playing"}</Text>
+        <View className='absolute bottom-4 left-2 right-2'>
+            <View className="bg-secondary border-2 border-primary rounded-2xl shadow-lg p-2">
+                {/* Top Section: Artwork + Track Info + Controls (Horizontally aligned) */}
+                <View className="flex-row items-center mb-1.5">
+                    <TouchableOpacity 
+                        className="flex-row items-center flex-1" 
+                        onPress={() => router.push("/player")}
+                        activeOpacity={0.7}
+                    >
+                        {displayedTrack && displayedTrack.artwork && (
+                            <Image source={{uri: displayedTrack.artwork}} className="w-10 h-10 rounded-lg mr-2"/>
+                        )}
+                        <View className="flex-1 overflow-hidden">
+                            <MovingText 
+                                text={displayedTrack ? displayedTrack.title || "" : "Not Playing"} 
+                                animationThreshold={16} 
+                                style="text-sm text-tertiary font-poppinsSemiBold" 
+                            />
+                            <Text numberOfLines={1} className="text-xs text-tertiary font-poppinsRegular">
+                                {displayedTrack ? displayedTrack.artist : "Not Playing"}
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
+                    
+                    {/* Controls aligned with text */}
+                    <View className="flex-row items-center">
+                        <TouchableOpacity className="px-1.5" onPress={previousSound}>
+                            <FontAwesome5 name="backward" size={16} color="#2e2a72" />
+                        </TouchableOpacity>
+                        <TouchableOpacity className="px-2" onPress={toggleSoundInPods}>
+                            {(playbackState.state === State.Playing) ? 
+                                <FontAwesome name="pause" size={20} color="#2e2a72" /> : 
+                                <FontAwesome name="play" size={20} color="#2e2a72" />
+                            }
+                        </TouchableOpacity>
+                        <TouchableOpacity className="px-1.5" onPress={nextSound}>
+                            <FontAwesome5 name="forward" size={16} color="#2e2a72" />
+                        </TouchableOpacity>
+                    </View>
                 </View>
-                <TouchableOpacity className="px-1" onPress={previousSound}>
-                    <Image source={icons.previous} className="w-[24px] h-[24px]" tintColor={"#2e2a72"}/>
-                </TouchableOpacity>
-                <TouchableOpacity className="px-1" onPress={toggleSoundInPods}>
-                    <Image source={(playbackState.state === State.Playing) ? icons.pause : icons.play2} className="w-[30px] h-[30px]" tintColor={"#2e2a72"} />
-                </TouchableOpacity>
-                <TouchableOpacity className="px-1" onPress={nextSound}>
-                    <Image source={icons.next} className="w-[24px] h-[24px]" tintColor={"#2e2a72"}/>
-                </TouchableOpacity>
+
+                {/* Slider with Time Labels */}
+                <View>
+                    <Slider
+                        style={{width: '100%', height: 25}}
+                        value={position}
+                        minimumValue={0}
+                        maximumValue={duration}
+                        minimumTrackTintColor="#2e2a72"
+                        maximumTrackTintColor="#735DA5"
+                        onSlidingComplete={seekSound}
+                    />
+                    <View className='flex-row justify-between'>
+                        <Text className='text-tertiary font-poppinsMedium text-xs'>{formatTime(position)}</Text>
+                        <Text className='text-tertiary font-poppinsMedium text-xs'>{formatTime(duration)}</Text>
+                    </View>
+                </View>
             </View>
-        </TouchableOpacity>
+        </View>
     )
 }
 

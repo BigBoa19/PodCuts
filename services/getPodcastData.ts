@@ -18,6 +18,7 @@ export default async function getPodcastEpisodes(id: string): Promise<PodcastEpi
       }
     });
     const data = await response.json();
+    console.log(JSON.stringify(data, null, 2));
     const episodes: PodcastEpisode[] = data.map((episode: any) => ({
       id: episode.id,
       title: episode.title,

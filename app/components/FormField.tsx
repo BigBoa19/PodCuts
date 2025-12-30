@@ -1,6 +1,6 @@
 import { View, Text, TextInput, TouchableOpacity, Image } from 'react-native';
 import React from 'react';
-import icons from '@/constants/icons';
+import { Feather } from '@expo/vector-icons';
 
 
 type FormFieldProps = {
@@ -11,6 +11,7 @@ type FormFieldProps = {
     otherStyles?: string;
     startCaps?: boolean;
     titleStyles?: string;
+    onSubmitEditing?: () => void;
 }
 
 const FormField: React.FC<FormFieldProps> = ({title, value, placeholder, handleChangeText, otherStyles, ...props}) => {
@@ -26,13 +27,17 @@ const FormField: React.FC<FormFieldProps> = ({title, value, placeholder, handleC
           onChangeText={handleChangeText}
           placeholderTextColor='#2e2a72'
           autoComplete='off'
+          autoCorrect={false}
+          textContentType='none'
           autoCapitalize={props.startCaps ? 'sentences' : 'none'}
           className='flex-1 font-psemibold text-base text-tertiary'
           secureTextEntry={title === 'Password' && !showPassword}
+          onSubmitEditing={props.onSubmitEditing}
+          returnKeyType='search'
         />
         {title === 'Password' && (
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)} className='flex-row items-center '>
-              <Image source={!showPassword ? icons.eye : icons.eyeHide} resizeMode='contain' className='w-6 h-6' />
+              <Feather name={!showPassword ? 'eye' : 'eye-off'} size={24} color="#2e2a72" />
           </TouchableOpacity>
         )}
         

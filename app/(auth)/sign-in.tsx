@@ -1,12 +1,13 @@
 import React from 'react'; import { UserContext } from '../context';
 import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native'
-import images from '@/constants/images'; import icons from '@/constants/icons'
+import images from '@/constants/images'; 
 import FormField from '../components/FormField'; import CustomButton from '../components/CustomButton'
-import { Link, router } from 'expo-router'
+import { router } from 'expo-router'
 import * as Google from 'expo-auth-session/providers/google';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential, User } from "firebase/auth";
 import { auth, db } from '../firebase';
 import { doc, setDoc } from 'firebase/firestore';
+import { useAppleSignIn } from '../hooks/useAppleSignIn';
 
 const SignIn = () => {
   const userData = React.useContext(UserContext);
@@ -41,16 +42,25 @@ const SignIn = () => {
   })
   const [isLoading, setIsLoading] = React.useState(false)
 
+  const { promptAsync: promptAppleSignIn, isAuthRequestLoading: isAppleLoading } = useAppleSignIn(
+    () => router.push('/pods'),
+    (error) => console.log('Sign In Failed: '+ error.message)
+  );
+
   const login = async () => {
     setIsLoading(true)
     try {
       const response = await signInWithEmailAndPassword(auth, form.email, form.password)
       router.push('/pods')
     } catch (error: any) {
-      alert('Sign In Failed: '+ error.message)
+      console.log('Sign In Failed: '+ error.message)
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const navigateSignUp = () => {
+    router.replace('/sign-up')
   }
 
   return (
@@ -96,17 +106,25 @@ const SignIn = () => {
             <Text className="text-lg text-tertiary font-poppinsRegular">
               Don't have an account?
             </Text>
-            <Link
-              href="/sign-up"
-              className="text-lg font-poppinsSemiBold text-tertiary"
-            >
-              Sign Up
-            </Link>
+            <TouchableOpacity onPress={navigateSignUp}>
+              <Text className="text-lg font-poppinsSemiBold text-tertiary">
+                Sign Up
+              </Text>
+            </TouchableOpacity>
           </View>
-          <View className="flex justify-center pt-5">
+          <View className="flex justify-center pt-5 gap-3">
             <TouchableOpacity onPress={() => promptAsync()} className="flex-row items-center justify-center bg-white p-2 rounded-lg mt-2">
               <Text className="text-tertiary font-poppinsSemiBold text-lg ml-2">
                 Continue with Google
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => promptAppleSignIn()} 
+              disabled={isAppleLoading}
+              className="flex-row items-center justify-center bg-black p-2 rounded-lg mt-2"
+            >
+              <Text className="text-white font-poppinsSemiBold text-lg ml-2">
+                {isAppleLoading ? 'Signing in...' : 'Continue with Apple'}
               </Text>
             </TouchableOpacity>
           </View>

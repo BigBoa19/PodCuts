@@ -1,20 +1,50 @@
 import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView, KeyboardAvoidingView } from 'react-native'
 import React from 'react'
-import images from '@/constants/images'; import icons from '@/constants/icons'
+import images from '@/constants/images'
 import FormField from '../components/FormField'; import CustomButton from '../components/CustomButton'
-import { Link, router } from 'expo-router'
+import { router } from 'expo-router'
+import * as Google from 'expo-auth-session/providers/google';
+import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithCredential, User } from "firebase/auth";
 import { auth, db } from '../firebase';
-import { createUserWithEmailAndPassword } from "firebase/auth"; import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
+import { useAppleSignIn } from '../hooks/useAppleSignIn';
 
 const SignUp = () => {
-  const handleGoBack = () => {
-    router.back()
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    iosClientId: '460321896686-ttu39rq7iq33jcjc667fijdnb1dheda8.apps.googleusercontent.com'
+  });
+
+  const addUserToDatabase = async (user: User) => {
+    const date = new Date();
+    const dateString = date.toLocaleString();
+    const usersDocRef = doc(db, 'users', user.uid);
+    await setDoc(usersDocRef, { email: user.email, timestamp: dateString}, { merge: true } );
   }
+
+  React.useEffect(() => {
+    if (response?.type === 'success') {
+      const { id_token } = response.params;
+      const credential = GoogleAuthProvider.credential(id_token);
+      signInWithCredential(auth, credential).then((userCredential) => {
+        const user = userCredential.user;
+        addUserToDatabase(user)
+        router.push('/pods')
+      }).catch((error) => {
+        console.log('Error: ', error)
+      });
+    }
+  }, [response]);
+
   const [form, setForm] = React.useState({
     email: '',
     password: ''
   })
   const [isLoading, setIsLoading] = React.useState(false)
+
+  const { promptAsync: promptAppleSignIn, isAuthRequestLoading: isAppleLoading } = useAppleSignIn(
+    () => router.push('/pods'),
+    (error) => console.log('Sign Up Failed: '+ error.message)
+  );
 
   const createUser = async () => {
     setIsLoading(true)
@@ -38,11 +68,13 @@ const SignUp = () => {
     }
   }
 
+  const navigateSignIn = () => {
+    router.replace('/sign-in')
+  }
+
   return (
     <SafeAreaView className=' bg-secondary h-full'>
-      <TouchableOpacity onPress={handleGoBack} className='p-4'>
-        <Image source={icons.leftArrow} resizeMode='contain' className='w-[20px] h-[20px]' tintColor={"#2e2a72"} />
-      </TouchableOpacity>
+
       <KeyboardAvoidingView behavior='padding' className='flex-1'>
         <ScrollView>
           <View className='flex-1 w-full justify-center px-4 my-6'>
@@ -52,7 +84,7 @@ const SignUp = () => {
               className='w-[240px] h-[100px] object-center mx-auto'
             />
 
-            <Text className="text-2xl font-semibold text-tertiary font-poppinsSemiBold">
+            <Text className="text-4xl font-semibold text-tertiary font-poppinsSemiBold">
                 Sign Up to PodCuts
             </Text>
 
@@ -85,12 +117,29 @@ const SignUp = () => {
               <Text className="text-lg text-tertiary font-poppinsRegular">
                 Have an account already?
               </Text>
-              <Link
-                href="/sign-in"
-                className="text-lg font-poppinsSemiBold text-tertiary">
-                Log In
-              </Link>
+              <TouchableOpacity onPress={navigateSignIn}>
+                <Text className="text-lg font-poppinsSemiBold text-tertiary">
+                  Log In
+                </Text>
+              </TouchableOpacity>
             </View>
+            <View className="flex justify-center pt-5 gap-3">
+              <TouchableOpacity onPress={() => promptAsync()} className="flex-row items-center justify-center bg-white p-2 rounded-lg mt-2">
+                <Text className="text-tertiary font-poppinsSemiBold text-lg ml-2">
+                  Continue with Google
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={() => promptAppleSignIn()} 
+                disabled={isAppleLoading}
+                className="flex-row items-center justify-center bg-black p-2 rounded-lg mt-2"
+              >
+                <Text className="text-white font-poppinsSemiBold text-lg ml-2">
+                  {isAppleLoading ? 'Signing up...' : 'Continue with Apple'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

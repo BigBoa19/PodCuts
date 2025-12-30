@@ -3,7 +3,7 @@ import { Stack } from 'expo-router'; import { StatusBar } from 'expo-status-bar'
 const AuthLayout = () => {
   return (
     <>
-      <Stack>
+      <Stack screenOptions={{ animation: 'fade' }}>
         <Stack.Screen 
         name='sign-in'
         options={{headerShown: false}}/>

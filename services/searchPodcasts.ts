@@ -7,6 +7,9 @@ export interface Podcast {
     image: string;
     description: string;
     author: string;
+    episodeCount?: number;
+    category?: string;
+    newestItemPubdate?: number;
 }
 
 export default async function searchPodcasts(searchTerm: string): Promise<Podcast[]> {
@@ -17,13 +20,22 @@ export default async function searchPodcasts(searchTerm: string): Promise<Podcas
             }
         });
         const data = await response.json();
-        const podcasts: Podcast[] = data.map((podcast: any) => ({
-            id: podcast.id,
-            title: podcast.title,
-            image: podcast.image,
-            description: podcast.description,
-            author: podcast.author,
-        }));
+        console.log(JSON.stringify(data, null, 2));
+        const podcasts: Podcast[] = data.map((podcast: any) => {
+            // Extract first category name from categories object
+            const category = podcast.categories ? Object.values(podcast.categories)[0] as string : undefined;
+            
+            return {
+                id: podcast.id,
+                title: podcast.title,
+                image: podcast.image,
+                description: podcast.description,
+                author: podcast.author || podcast.ownerName,
+                episodeCount: podcast.episodeCount,
+                category: category,
+                newestItemPubdate: podcast.newestItemPubdate,
+            };
+        });
         return podcasts;
     } catch (error) {
         console.error('Error searching podcasts:', error);

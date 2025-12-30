@@ -1,11 +1,11 @@
 import React from 'react'; import { UserContext } from '../context';
 import { View, Text, TouchableOpacity, ScrollView, Image, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
-import icons from '@/constants/icons';
 import FormField from '../components/FormField'; import FloatingPlayer from './floatingPlayer';
 import { router } from 'expo-router';
 import { collection, deleteDoc, doc, onSnapshot, query } from 'firebase/firestore'; import { db } from '../firebase';
 import CustomButton from '../components/CustomButton';
 import TrackPlayer from 'react-native-track-player';
+import { AntDesign, FontAwesome5, FontAwesome, FontAwesome6 } from '@expo/vector-icons';
 import { PodcastEpisode } from '@/services/getPodcastData';
 
 const Pods = () => { 
@@ -68,7 +68,6 @@ const Pods = () => {
         image: episode.image || null,
         audioUrl: episode.audioUrl || '',
         transcript: episode.transcript || null,
-        description: episode.description || '',
         datePublished: episode.datePublished || '',
         duration: episode.duration || 0,
         loading: episode.loading || false,
@@ -101,11 +100,11 @@ const Pods = () => {
         <View className='flex-row items-center flex-shrink'>
           <Text className="text-tertiary text-2xl font-poppinsBold">Your PodCuts</Text>
           <TouchableOpacity onPress={handleNavigateAdd} className='px-1 ml-1'>
-            <Image source={icons.plus} resizeMode='contain' className='w-[22px] h-[22px]' style={{tintColor: '#2e2a72'}} />
+            <FontAwesome6 name="plus" size={20} color="#2e2a72" />
           </TouchableOpacity>
         </View>
         <TouchableOpacity onPress={handleNavigateSettings} className='p-3 flex-shrink-0'>
-          <Image source={icons.settings} resizeMode='contain' className='w-[26px] h-[26px]' style={{tintColor: '#2e2a72'}} />
+          <FontAwesome6 name="gear" size={20} color="#2e2a72" />
         </TouchableOpacity>
       </View>
       {/* Search Bar */}
@@ -148,7 +147,7 @@ const Pods = () => {
                 }
               </View>
               <TouchableOpacity onPress={showDeleteAlert(pod.id)} className='p-2'>
-                <Image source={icons.trash} resizeMode='contain' className='w-[22px] h-[22px]' style={{tintColor: '#A30000'}} />
+                <FontAwesome6 name="trash" size={20} color="#A30000" />
               </TouchableOpacity>
             </TouchableOpacity>
           ))}
