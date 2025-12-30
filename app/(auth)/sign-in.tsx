@@ -29,7 +29,7 @@ const SignIn = () => {
       signInWithCredential(auth, credential).then((userCredential) => {
         const user = userCredential.user;
         addUserToDatabase(user)
-        router.push('/pods')
+        router.replace('/pods')
       }).catch((error) => {
         console.log('Error: ', error)
       });
@@ -43,7 +43,7 @@ const SignIn = () => {
   const [isLoading, setIsLoading] = React.useState(false)
 
   const { promptAsync: promptAppleSignIn, isAuthRequestLoading: isAppleLoading } = useAppleSignIn(
-    () => router.push('/pods'),
+    () => router.replace('/pods'),
     (error) => console.log('Sign In Failed: '+ error.message)
   );
 
@@ -51,7 +51,7 @@ const SignIn = () => {
     setIsLoading(true)
     try {
       const response = await signInWithEmailAndPassword(auth, form.email, form.password)
-      router.push('/pods')
+      router.replace('/pods')
     } catch (error: any) {
       console.log('Sign In Failed: '+ error.message)
     } finally {
