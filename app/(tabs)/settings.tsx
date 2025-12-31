@@ -1,4 +1,4 @@
-import { View, Text, SafeAreaView, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
+import { View, Text, SafeAreaView, TouchableOpacity, Image, ScrollView, Alert, Linking } from 'react-native';
 import { UserContext } from '../context'; import React from 'react';
 import { auth } from '../firebase'; import { signOut } from 'firebase/auth';
 import CustomButton from '../components/CustomButton';
@@ -34,6 +34,22 @@ const Settings = () => {
     );
   }
 
+  const handleContactUs = () => {
+    const email = 'ncdev1919@gmail.com'; // Replace with your actual support email
+    const subject = 'PodCuts Support Request';
+    const body = `Hello PodCuts Team,\n\n`; // Pre-filled body text
+    
+    const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    Linking.openURL(mailtoUrl).catch((err) => {
+      Alert.alert(
+        "Unable to open email",
+        "Please send an email to support@podcuts.com",
+        [{ text: "OK" }]
+      );
+    });
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-secondary">
       <View className="flex-row items-cente pt-4">
@@ -52,11 +68,12 @@ const Settings = () => {
       </View>
       <Text className="text-tertiary font-poppinsBold text-2xl pb-2 pt-8 mx-auto">Support Us</Text>
       <Text className="text-tertiary font-poppinsBold text-base mx-auto">Rate Us</Text>
-      <Text className="text-tertiary font-poppinsBold text-base mx-auto">Invite a Friend</Text>
       <Text className="text-tertiary font-poppinsBold text-2xl pb-2 pt-8 mx-auto">General</Text>
       <Text className="text-tertiary font-poppinsBold text-base mx-auto">Privacy Policy</Text>
       <Text className="text-tertiary font-poppinsBold text-base mx-auto">Terms of Service</Text>
-      <Text className="text-tertiary font-poppinsBold text-base mx-auto">Contact Us</Text>
+      <TouchableOpacity onPress={handleContactUs} className="py-2">
+        <Text className="text-tertiary font-poppinsBold text-base mx-auto">Contact Us</Text>
+      </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );

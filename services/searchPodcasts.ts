@@ -20,7 +20,7 @@ export default async function searchPodcasts(searchTerm: string): Promise<Podcas
             }
         });
         const data = await response.json();
-        console.log(JSON.stringify(data, null, 2));
+        // console.log(JSON.stringify(data, null, 2));
         const podcasts: Podcast[] = data.map((podcast: any) => {
             // Extract first category name from categories object
             const category = podcast.categories ? Object.values(podcast.categories)[0] as string : undefined;

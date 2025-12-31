@@ -77,7 +77,7 @@ const Podcast = () => {
             });
 
             // Update chapters as soon as they're ready
-            chapterize(sentences, transcript).then(async (chaptersData) => {
+            chapterize(sentences).then(async (chaptersData) => {
                 if (chaptersData) {
                     await updateDoc(episodeDocRef, { chapters: chaptersData });
                 }

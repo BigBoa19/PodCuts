@@ -19,33 +19,12 @@ export function getTranscriptFromSentences(sentences: any[]) {
     return sentenceArray.join(" ")
 }
 
-function highlightStartPhrases(transcript: string, chapters: any[]): string {
-    let highlightedTranscript = transcript;
-    
-    // Process chapters in reverse order to preserve positions when replacing
-    for (let i = chapters.length - 1; i >= 0; i--) {
-        const chapter = chapters[i];
-        if (chapter.start_phrase) {
-            // Find the start_phrase in the transcript (case-insensitive)
-            const regex = new RegExp(chapter.start_phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-            highlightedTranscript = highlightedTranscript.replace(regex, (match) => {
-                return match.toUpperCase();
-            });
-        }
-    }
-    
-    return highlightedTranscript;
-}
-
-export default async function chapterize(sentences: Sentence[], transcript: string) {
+export default async function chapterize(sentences: Sentence[]) {
     if (!sentences || sentences.length === 0) return [];
     
     try {
         const transcriptFromSentences = getTranscriptFromSentences(sentences)
-        if (transcriptFromSentences != transcript) {
-            console.log("NOT A MATCH")
-        }
-        console.log("MATCH!")
+
         console.log("CHAPTERIZING")
         const response = await fetch(`${BASE_URL}/api/chapterize`, {
             headers: {
@@ -53,14 +32,9 @@ export default async function chapterize(sentences: Sentence[], transcript: stri
                 'Content-Type': 'application/json',
             },
             method: 'POST',
-            body: JSON.stringify({ transcript }),
+            body: JSON.stringify({ transcript: transcriptFromSentences }),
         });
         const data = await response.json();
-        console.log('Chapterization data:', JSON.stringify(data, null, 2));
-
-        // Highlight start phrases in transcript and save to file
-        const highlightedTranscript = highlightStartPhrases(transcript, data.chapters);
-        console.log(highlightedTranscript)
 
         let chaptersWithTimes: Chapter[] = []
         let searchIndex = 0
@@ -98,7 +72,7 @@ export default async function chapterize(sentences: Sentence[], transcript: stri
             }
         }
         const finalChapters = cleanChapters(chaptersWithTimes);
-        console.log("Returning Chapters", finalChapters)
+        // console.log("Returning Chapters", finalChapters)
         return finalChapters
     } catch (error) {
         console.error('Error chapterizing audio:', error);
@@ -123,7 +97,6 @@ function cleanChapters(chapters: Chapter[]): Chapter[] {
 
         // Merge anything under 60 seconds (Fixes Ch 4, Ch 8, Ch 9)
         if (duration < 60000) { 
-            console.log(`Merging micro-chapter: "${current.title}"`);
             previous.end = current.end;
         } else {
             merged.push(current);

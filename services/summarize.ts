@@ -13,7 +13,7 @@ export default async function summarize(transcript: string) {
             body: JSON.stringify({ transcript }),
         });
         const data = await response.json();
-        console.log('Summarization data:', JSON.stringify(data, null, 2));
+        // console.log('Summarization data:', JSON.stringify(data, null, 2));
         return data;
     } catch (error) {
         console.error('Error summarizing audio:', error);

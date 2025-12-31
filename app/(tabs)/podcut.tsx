@@ -293,7 +293,7 @@ const PodCut = () => {
                                     </View>
                                 ))
                             ) : (
-                                <Text className='text-tertiary font-poppinsRegular text-base'>Loading cuts...</Text>
+                                <Text className='text-tertiary font-poppinsRegular text-base'>Loading cuts...( this could take a minute or two )</Text>
                             )}
                         </View>
                     </>
