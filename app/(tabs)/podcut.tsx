@@ -2,7 +2,7 @@ import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView, Animated
 import React from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import CustomButton from '../components/CustomButton';
-import TrackPlayer, { useActiveTrack, usePlaybackState, State } from 'react-native-track-player';
+import TrackPlayer, { State } from 'react-native-track-player';
 import FloatingPlayer from './floatingPlayer';
 import { collection, doc, onSnapshot } from 'firebase/firestore';
 import { UserContext } from '../context';
@@ -10,6 +10,7 @@ import { db } from '../firebase';
 import { AntDesign } from '@expo/vector-icons';
 import getPodcastEpisodes from '@/services/getPodcastData';
 import RenderHTML from 'react-native-render-html';
+import { getPodcastData } from '@/services/searchPodcasts';
 
 const PodCut = () => {
     const handleGoBack = () => {router.back()}
@@ -30,15 +31,16 @@ const PodCut = () => {
     const [podcastMetadata, setPodcastMetadata] = React.useState<{
         description: string | null;
         author: string | null;
-        episodeCount: string | null;
+        episodeCount: number | null;
         category: string | null;
-        newestItemPubdate: string | null;
+        newestItemPubdate: number | null;
     }>({ description: null, author: null, episodeCount: null, category: null, newestItemPubdate: null })
     
     const [activeTab, setActiveTab] = React.useState<'summary' | 'transcript' | 'description'>('summary')
     const [tabContainerWidth, setTabContainerWidth] = React.useState(0)
     const indicatorPosition = React.useRef(new Animated.Value(0)).current
     const [expandedNotesIndex, setExpandedNotesIndex] = React.useState<number | null>(null)
+    const [isSummaryExpanded, setIsSummaryExpanded] = React.useState(true)
 
     React.useEffect(() => {
         if (tabContainerWidth === 0) return
@@ -64,24 +66,13 @@ const PodCut = () => {
             if (docSnapshot.exists()) {
                 const data = docSnapshot.data();
                 setEpisodeData(prev => ({
+                    ...prev,
                     transcript: 'transcript' in data ? data.transcript : prev.transcript,
                     summary: 'summary' in data ? data.summary : prev.summary,
                     chapters: 'chapters' in data ? data.chapters : prev.chapters,
-                    description: 'description' in data ? data.description : prev.description,
                 }));
-                // Store podcastId from Firestore
                 if (data.podcastId) {
                     setPodcastId(data.podcastId);
-                }
-                // Store podcast metadata if available
-                if (data.podcastDescription || data.podcastAuthor || data.podcastEpisodeCount) {
-                    setPodcastMetadata(prev => ({
-                        description: data.podcastDescription || prev.description,
-                        author: data.podcastAuthor || prev.author,
-                        episodeCount: data.podcastEpisodeCount?.toString() || prev.episodeCount,
-                        category: data.podcastCategory || prev.category,
-                        newestItemPubdate: data.podcastNewestItemPubdate?.toString() || prev.newestItemPubdate,
-                    }));
                 }
             }
         }, (error) => {
@@ -91,13 +82,23 @@ const PodCut = () => {
         return () => unsubscribe();
     }, [user, id]);
 
-    // Fetch episode data from API if podcastId is available
+    // Fetch podcast data from API
     React.useEffect(() => {
         const fetchEpisodeData = async () => {
             if (!podcastId || !id) return;
 
             try {
                 const episodes = await getPodcastEpisodes(podcastId);
+                const podcastData = await getPodcastData(podcastId);
+                // set metadata
+                console.log("METADATA SET")
+                setPodcastMetadata({
+                    description: podcastData?.description || '',
+                    author: podcastData?.author || '',
+                    episodeCount: podcastData?.episodeCount ?? null,
+                    category: podcastData?.category || '',
+                    newestItemPubdate: podcastData?.newestItemPubdate ?? null,
+                });
                 const matchingEpisode = episodes.find(ep => String(ep.id) === String(id));
                 
                 if (matchingEpisode && matchingEpisode.description) {
@@ -141,7 +142,29 @@ const PodCut = () => {
 
     const seekToChapter = async (timeInMs: number) => {
         try {
-            // Convert milliseconds to seconds for TrackPlayer
+            // Check if a track is added
+            const activeTrack = await TrackPlayer.getActiveTrack();
+            const queue = await TrackPlayer.getQueue();
+            
+            // Check if we need to switch podcasts (different episodeId)
+            const needsToSwitchPodcast = activeTrack && activeTrack.episodeId !== id;
+            
+            if ((!activeTrack && queue.length === 0) || needsToSwitchPodcast) {
+                await TrackPlayer.reset();
+                await TrackPlayer.add({
+                    url: audioUrl,
+                    title: title,
+                    artist: podcastName,
+                    artwork: image || "",
+                    episodeId: id,
+                });
+            }
+            
+            const state = (await TrackPlayer.getPlaybackState()).state;
+            if (state !== State.Playing) {
+                await TrackPlayer.play();
+            }
+            
             const timeInSeconds = timeInMs / 1000;
             await TrackPlayer.seekTo(timeInSeconds);
         } catch (error) {
@@ -250,14 +273,28 @@ const PodCut = () => {
                     <>
                         {/* Summary Section */}
                         <View className='px-4 py-3'>
-                            <Text className='text-tertiary text-2xl font-poppinsBold mb-3'>Summary</Text>
-                            <View className='rounded-lg p-4 border-2 border-gray-200'>
-                                {episodeData.summary ? (
-                                    <Text className='text-tertiary font-poppinsRegular text-base'>{episodeData.summary}</Text>
-                                ) : (
-                                    <Text className='text-tertiary font-poppinsRegular text-base'>Loading summary...</Text>
-                                )}
+                            <View className='flex-row items-center justify-between mb-3'>
+                                <Text className='text-tertiary text-2xl font-poppinsBold'>Summary</Text>
+                                <TouchableOpacity 
+                                    onPress={() => setIsSummaryExpanded(!isSummaryExpanded)}
+                                    className='p-2'
+                                >
+                                    <AntDesign 
+                                        name={isSummaryExpanded ? "up" : "down"} 
+                                        size={20} 
+                                        color="#2e2a72" 
+                                    />
+                                </TouchableOpacity>
                             </View>
+                            {isSummaryExpanded && (
+                                <View className='rounded-lg p-4 border-2 border-gray-200'>
+                                    {episodeData.summary ? (
+                                        <Text className='text-tertiary font-poppinsRegular text-base'>{episodeData.summary}</Text>
+                                    ) : (
+                                        <Text className='text-tertiary font-poppinsRegular text-base'>Loading summary...</Text>
+                                    )}
+                                </View>
+                            )}
                         </View>
                         
                         {/* Cuts Section */}

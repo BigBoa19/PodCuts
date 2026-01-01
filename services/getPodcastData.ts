@@ -10,9 +10,9 @@ export interface PodcastEpisode {
 const BASE_URL = 'https://podcuts-backend-production.up.railway.app';
 const BACKEND_KEY = 'b7cf1295cdfc1b6d82c92ed666fc57fb7308afd36b2cbb3c92876d68225de09d';
 
-export default async function getPodcastEpisodes(id: string): Promise<PodcastEpisode[]> {
+export default async function getPodcastEpisodes(id: string, maxCount?: number): Promise<PodcastEpisode[]> {
   try {
-    const response = await fetch(`${BASE_URL}/api/podcasts/episodes?feedId=${id}`, {
+    const response = await fetch(`${BASE_URL}/api/podcasts/episodes?feedId=${id}${maxCount ? `&max=${maxCount}` : ''}`, {
       headers: {
         'x-podcuts-secret': `${BACKEND_KEY}`
       }

@@ -4,7 +4,6 @@ import FormField from '../components/FormField'; import FloatingPlayer from './f
 import { router } from 'expo-router';
 import { collection, deleteDoc, doc, onSnapshot, query } from 'firebase/firestore'; import { db } from '../firebase';
 import CustomButton from '../components/CustomButton';
-import TrackPlayer from 'react-native-track-player';
 import { AntDesign, FontAwesome5, FontAwesome, FontAwesome6 } from '@expo/vector-icons';
 import { PodcastEpisode } from '@/services/getPodcastData';
 
@@ -70,7 +69,6 @@ const Pods = () => {
         transcript: episode.transcript || null,
         datePublished: episode.datePublished || '',
         duration: episode.duration || 0,
-        loading: episode.loading || false,
       }));
       setPodcastEpisodes(episodes);
       setFilteredPodcastEpisodes(episodes);
@@ -119,7 +117,6 @@ const Pods = () => {
           {filteredPodcastEpisodes.map((pod) => ( 
             <TouchableOpacity key={pod.id} className="my-1 flex-row items-center space-x-4 p-0.5 border-2 border-primary rounded-lg bg-secondary shadow-lg" 
             onPress={() => {
-              if (pod.loading) return;
               router.push({
               pathname: '/podcut',
               params: { id: pod.id, title: pod.title, podcastName: pod.podcastName, image: pod.image, audioUrl: pod.audioUrl, transcript: pod.transcript}})}}>
@@ -127,24 +124,6 @@ const Pods = () => {
               <View className='flex-1 justify-center'>
                 <Text className="text-sm font-poppinsSemiBold flex-shrink text-tertiary" numberOfLines={2} ellipsizeMode="tail">{pod.title}</Text>
                 <Text className="text-sm font-poppinsRegular flex-shrink text-tertiary" numberOfLines={1} ellipsizeMode="tail">{pod.podcastName}</Text>
-                
-                {pod.loading && 
-                <View className='flex-row'>
-                  <Text className="text-sm font-poppinsBold flex-shrink text-tertiary">Preparing Cuts...</Text>
-                  <CustomButton title="Listen to episode" containerStyles='p-2' textStyles='text-sm' handlePress={() => {
-                    TrackPlayer.reset();
-                    TrackPlayer.add({
-                        id: 0,
-                        url: pod.audioUrl,
-                        title: pod.title,
-                        artist: pod.podcastName,
-                        artwork: pod.image || "",
-                        episodeId: pod.id,
-                    });
-                    TrackPlayer.play();
-                  }} />
-                </View>
-                }
               </View>
               <TouchableOpacity onPress={showDeleteAlert(pod.id)} className='p-2'>
                 <FontAwesome6 name="trash" size={20} color="#A30000" />

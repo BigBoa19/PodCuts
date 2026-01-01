@@ -7,7 +7,7 @@ export interface Podcast {
     image: string;
     description: string;
     author: string;
-    episodeCount?: number;
+    episodeCount: number;
     category?: string;
     newestItemPubdate?: number;
 }
@@ -42,3 +42,47 @@ export default async function searchPodcasts(searchTerm: string): Promise<Podcas
         return [];
     }
 };
+
+export async function getPodcastData(id: string): Promise<Podcast | null> {
+    try {
+        const response = await fetch(`${BASE_URL}/api/podcasts/${id}`, {
+            headers: {
+                'x-podcuts-secret': `${BACKEND_KEY}`
+            }
+        });
+        const data = await response.json();
+        console.log(JSON.stringify(data, null, 2));
+        
+        // Use the title to search and find the matching podcast with newestItemPubdate
+        let newestItemPubdate: number | undefined = undefined;
+        if (data.title) {
+            try {
+                const searchResults = await searchPodcasts(data.title);
+                const matchingPodcast = searchResults.find(podcast => String(podcast.id) === String(id));
+                if (matchingPodcast) {
+                    newestItemPubdate = matchingPodcast.newestItemPubdate;
+                }
+            } catch (searchError) {
+                console.warn('Could not search podcasts to get newestItemPubdate:', searchError);
+            }
+        }
+
+        console.log("Category: ", data.categories ? Object.values(data.categories)[0] as string : undefined);
+        
+        return {
+            id: data.id,
+            title: data.title,
+            image: data.image,
+            description: data.description,
+            author: data.author || data.ownerName,
+            episodeCount: data.episodeCount,
+            category: Object.values(data.categories)[0] as string,
+            newestItemPubdate: newestItemPubdate,
+        };
+
+    }
+    catch (error) {
+        console.error('Error getting podcast data:', error);
+        return null;
+    }
+}

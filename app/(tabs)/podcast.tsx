@@ -49,6 +49,7 @@ const Podcast = () => {
     }
 
     const handleLoadMore = () => {
+        console.log("Loading more episodes", allEpisodes.length, displayedCount);
         setDisplayedCount(prev => Math.min(prev + 10, allEpisodes.length));
     }
 
@@ -101,11 +102,6 @@ const Podcast = () => {
                 podcastName: podcastName,
                 podcastId: id,
                 image: image,
-                podcastDescription: description,
-                podcastAuthor: author,
-                podcastEpisodeCount: episodeCount ? parseInt(episodeCount) : undefined,
-                podcastCategory: category,
-                podcastNewestItemPubdate: newestItemPubdate ? parseInt(newestItemPubdate) : undefined,
                 ...episodeData,
                 id: episodeIdString
             });
