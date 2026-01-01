@@ -6,6 +6,7 @@ import { AntDesign, FontAwesome, FontAwesome5 } from '@expo/vector-icons';
 import { collection, doc, onSnapshot } from 'firebase/firestore';
 import { UserContext } from '../context';
 import { db } from '../firebase';
+import MovingText from '../components/MovingText';
 
 const Player = () => {
     const { position, duration } = useProgress();
@@ -115,8 +116,14 @@ const Player = () => {
                 <View className='flex-1 items-center'>
                     <Text className='text-lg font-poppinsSemiBold text-tertiary mt-2'>{currentTrack?.artist}</Text>
                     <Image source={{ uri: currentTrack?.artwork }} className="w-[150px] h-[150px] rounded-lg mx-auto mt-6"/>
-                    <Text className='text-2xl font-poppinsBold text-tertiary mt-4' numberOfLines={1} ellipsizeMode="tail">{currentTrack?.title}</Text>
-                    
+                    <View className="mt-4 w-full px-4">
+                        <MovingText
+                            text={currentTrack?.title ?? ''}
+                            animationThreshold={20}
+                            style="text-2xl font-poppinsBold text-tertiary"
+                        />
+                    </View>
+
                     <Slider
                         style={{width: 350, height: 40}} value={position} minimumValue={0}
                         maximumValue={duration} minimumTrackTintColor="#2e2a72"
@@ -179,3 +186,4 @@ const Player = () => {
 }
 
 export default Player
+
