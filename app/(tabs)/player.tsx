@@ -121,6 +121,7 @@ const Player = () => {
                             text={currentTrack?.title ?? ''}
                             animationThreshold={20}
                             style="text-2xl font-poppinsBold text-tertiary"
+                            charWidth={9}
                         />
                     </View>
 

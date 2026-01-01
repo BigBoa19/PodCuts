@@ -13,24 +13,36 @@ export type MovingTextProps = {
   text: string;
   animationThreshold: number;
   style?: string;
+  charWidth?: number;
 };
 
-const MovingText = ({ text, animationThreshold, style }: MovingTextProps) => {
+const MovingText = ({
+  text,
+  animationThreshold,
+  style,
+  charWidth = 5,
+}: MovingTextProps) => {
   const translateX = useSharedValue(0);
+
+  // keep your short-text rule if you added it earlier
   const shouldAnimate = text.length >= animationThreshold && text.length >= 25;
 
-  const textWidth = text.length * 5;
+  const textWidth = text.length * charWidth;
 
-  //constant speed
   const SPEED_PX_PER_SEC = 25;
-
-  //duration derived from distance so speed is constant
-  const durationMs = Math.max(1500, Math.round((textWidth / SPEED_PX_PER_SEC) * 1000)); //withTiming(-textWidth, { duration: 5000 })
+  const durationMs = Math.max(
+    1500,
+    Math.round((textWidth / SPEED_PX_PER_SEC) * 1000)
+  );
 
   React.useEffect(() => {
-    if (!shouldAnimate) return;
+    if (!shouldAnimate) {
+      cancelAnimation(translateX);
+      translateX.value = 0;
+      return;
+    }
 
-    translateX.value = 0; // start consistent each time
+    translateX.value = 0;
 
     translateX.value = withDelay(
       1000,
@@ -40,7 +52,7 @@ const MovingText = ({ text, animationThreshold, style }: MovingTextProps) => {
           easing: Easing.linear,
         }),
         -1,
-        true // ping-pong back
+        true
       )
     );
 
@@ -50,17 +62,15 @@ const MovingText = ({ text, animationThreshold, style }: MovingTextProps) => {
     };
   }, [translateX, shouldAnimate, textWidth, durationMs]);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: translateX.value }],
-    };
-  });
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
 
   return (
     <Animated.Text
       numberOfLines={1}
       className={`${style} ${shouldAnimate ? 'w-[9999px]' : ''}`}
-      style={[animatedStyle]}
+      style={animatedStyle}
     >
       {text}
     </Animated.Text>
@@ -68,6 +78,3 @@ const MovingText = ({ text, animationThreshold, style }: MovingTextProps) => {
 };
 
 export default MovingText;
-
-
-
