@@ -1,8 +1,8 @@
-import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView, Animated, Dimensions } from 'react-native'
+import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView, Animated, Dimensions, FlatList } from 'react-native'
 import React from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
 import CustomButton from '../components/CustomButton';
-import TrackPlayer, { State } from 'react-native-track-player';
+import TrackPlayer, { State, useProgress, useActiveTrack } from 'react-native-track-player';
 import FloatingPlayer from './floatingPlayer';
 import { collection, doc, onSnapshot } from 'firebase/firestore';
 import { UserContext } from '../context';
@@ -10,6 +10,7 @@ import { db } from '../firebase';
 import { AntDesign } from '@expo/vector-icons';
 import getPodcastEpisodes from '@/services/getPodcastData';
 import RenderHTML from 'react-native-render-html';
+import Markdown from 'react-native-markdown-display';
 import { getPodcastData } from '@/services/searchPodcasts';
 
 const PodCut = () => {
@@ -21,7 +22,7 @@ const PodCut = () => {
     }>()
     
     const [episodeData, setEpisodeData] = React.useState<{
-        transcript: string | null;
+        transcript: Array<{ text: string; start: number; end: number }> | null;
         summary: string | null;
         chapters: any[] | null;
         description: string | null;
@@ -41,6 +42,13 @@ const PodCut = () => {
     const indicatorPosition = React.useRef(new Animated.Value(0)).current
     const [expandedNotesIndex, setExpandedNotesIndex] = React.useState<number | null>(null)
     const [isSummaryExpanded, setIsSummaryExpanded] = React.useState(true)
+    const { position } = useProgress(150) // Update every 150ms - balance between responsiveness and performance
+    const activeTrack = useActiveTrack()
+    const mainScrollViewRef = React.useRef<ScrollView>(null)
+    const transcriptFlatListRef = React.useRef<FlatList>(null)
+    const sentenceHeights = React.useRef<{ [key: number]: number }>({})
+    const [activeSentenceIndex, setActiveSentenceIndex] = React.useState<number | null>(null)
+    const lastScrollIndex = React.useRef<number | null>(null)
 
     React.useEffect(() => {
         if (tabContainerWidth === 0) return
@@ -65,9 +73,10 @@ const PodCut = () => {
         const unsubscribe = onSnapshot(episodeDocRef, (docSnapshot) => {
             if (docSnapshot.exists()) {
                 const data = docSnapshot.data();
+                const sentences = 'sentences' in data ? data.sentences : null;
                 setEpisodeData(prev => ({
                     ...prev,
-                    transcript: 'transcript' in data ? data.transcript : prev.transcript,
+                    transcript: sentences,
                     summary: 'summary' in data ? data.summary : prev.summary,
                     chapters: 'chapters' in data ? data.chapters : prev.chapters,
                 }));
@@ -90,8 +99,6 @@ const PodCut = () => {
             try {
                 const episodes = await getPodcastEpisodes(podcastId);
                 const podcastData = await getPodcastData(podcastId);
-                // set metadata
-                console.log("METADATA SET")
                 setPodcastMetadata({
                     description: podcastData?.description || '',
                     author: podcastData?.author || '',
@@ -120,6 +127,50 @@ const PodCut = () => {
             startPlay();
         }
     }, []);
+
+    // Find the active sentence based on current playback position
+    React.useEffect(() => {
+        if (!episodeData.transcript || !Array.isArray(episodeData.transcript) || episodeData.transcript.length === 0) {
+            setActiveSentenceIndex(null);
+            return;
+        }
+
+        // Check if the current track matches this episode
+        const currentEpisodeId = (activeTrack as any)?.episodeId;
+        if (currentEpisodeId !== id) {
+            setActiveSentenceIndex(null);
+            return;
+        }
+
+        // Position is already in seconds, and sentence.start/end are also in seconds
+        const currentTimeSeconds = position;
+
+        // Find the sentence that contains the current time
+        const activeIndex = episodeData.transcript.findIndex(
+            (sentence) => currentTimeSeconds >= sentence.start && currentTimeSeconds <= sentence.end
+        );
+
+        if (activeIndex !== -1 && activeIndex !== activeSentenceIndex) {
+            setActiveSentenceIndex(activeIndex);
+            
+            // Auto-scroll to the active sentence when transcript tab is active
+            // Only scroll if it's a different sentence to avoid unnecessary scrolls
+            if (activeTab === 'transcript' && lastScrollIndex.current !== activeIndex) {
+                lastScrollIndex.current = activeIndex;
+                // Use requestAnimationFrame for smoother scrolling
+                requestAnimationFrame(() => {
+                    transcriptFlatListRef.current?.scrollToIndex({
+                        index: activeIndex,
+                        animated: true,
+                        viewPosition: 0.3, // Position sentence at 30% from top of viewport
+                    });
+                });
+            }
+        } else if (activeIndex === -1) {
+            setActiveSentenceIndex(null);
+            lastScrollIndex.current = null;
+        }
+    }, [position, episodeData.transcript, activeTrack, id, activeTab, activeSentenceIndex]);
 
     const formatChapterTime = (ms: number) => {
         const seconds = Math.floor(ms / 1000);
@@ -176,10 +227,121 @@ const PodCut = () => {
         setExpandedNotesIndex(expandedNotesIndex === index ? null : index);
     }
 
+    const seekToSentence = async (timeInSeconds: number) => {
+        try {
+            const activeTrack = await TrackPlayer.getActiveTrack();
+            const queue = await TrackPlayer.getQueue();
+            
+            const needsToSwitchPodcast = activeTrack && activeTrack.episodeId !== id;
+            
+            if ((!activeTrack && queue.length === 0) || needsToSwitchPodcast) {
+                await TrackPlayer.reset();
+                await TrackPlayer.add({
+                    url: audioUrl,
+                    title: title,
+                    artist: podcastName,
+                    artwork: image || "",
+                    episodeId: id,
+                });
+                // Wait a bit for track to be ready
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+            
+            const state = (await TrackPlayer.getPlaybackState()).state;
+            if (state !== State.Playing) {
+                await TrackPlayer.play();
+            }
+            
+            // timeInSeconds is already in seconds, no conversion needed
+            await TrackPlayer.seekTo(timeInSeconds);
+        } catch (error) {
+            console.error('Failed to seek to sentence:', error);
+        }
+    }
+
+    // Memoized sentence component to prevent unnecessary re-renders
+    const SentenceItem = React.memo(({ sentence, index, isActive, onPress, onLayout }: {
+        sentence: { text: string; start: number; end: number };
+        index: number;
+        isActive: boolean;
+        onPress: (timeInSeconds: number) => void;
+        onLayout: (index: number, height: number) => void;
+    }) => {
+        return (
+            <TouchableOpacity
+                onPress={() => onPress(sentence.start)}
+                activeOpacity={0.7}
+            >
+                <View
+                    onLayout={(event) => {
+                        const { height } = event.nativeEvent.layout;
+                        onLayout(index, height);
+                    }}
+                    className="py-2 px-1"
+                >
+                    <Text
+                        className={`text-base ${
+                            isActive 
+                                ? 'text-tertiary font-poppinsBold' 
+                                : 'text-tertiary font-poppinsRegular'
+                        }`}
+                    >
+                        {sentence.text}
+                    </Text>
+                </View>
+            </TouchableOpacity>
+        );
+    }, (prevProps, nextProps) => {
+        // Only re-render if active state changes or text changes
+        return prevProps.isActive === nextProps.isActive && 
+               prevProps.sentence.text === nextProps.sentence.text;
+    });
+
+    const handleSentenceLayout = React.useCallback((index: number, height: number) => {
+        sentenceHeights.current[index] = height;
+    }, []);
+
+    const seekToSentenceRef = React.useRef(seekToSentence);
+    React.useEffect(() => {
+        seekToSentenceRef.current = seekToSentence;
+    }, [seekToSentence]);
+
+    const handleSeekToSentence = React.useCallback((timeInSeconds: number) => {
+        seekToSentenceRef.current(timeInSeconds);
+    }, []);
+
+    const renderSentence = React.useCallback(({ item, index }: { item: { text: string; start: number; end: number }; index: number }) => {
+        return (
+            <SentenceItem
+                sentence={item}
+                index={index}
+                isActive={activeSentenceIndex === index}
+                onPress={handleSeekToSentence}
+                onLayout={handleSentenceLayout}
+            />
+        );
+    }, [activeSentenceIndex, handleSeekToSentence, handleSentenceLayout]);
+
+    const getItemLayout = React.useCallback((data: any, index: number) => {
+        const height = sentenceHeights.current[index] || 50; // Default height estimate
+        return {
+            length: height,
+            offset: Object.values(sentenceHeights.current)
+                .slice(0, index)
+                .reduce((sum, h) => sum + (h || 50), 0),
+            index,
+        };
+    }, []);
+
     const cuts = episodeData.chapters || []
+    const sentences = episodeData.transcript || []
     return (
         <SafeAreaView className='bg-secondary h-full'>
-            <ScrollView className='flex-1' showsVerticalScrollIndicator={false}>
+            <ScrollView 
+                ref={mainScrollViewRef}
+                className='flex-1' 
+                showsVerticalScrollIndicator={false}
+            >
                 {/* Header */}
                 <TouchableOpacity onPress={handleGoBack} className='p-4'>
                     <AntDesign name="arrowleft" size={24} color="#2e2a72" />
@@ -190,7 +352,7 @@ const PodCut = () => {
                         <Text className="text-tertiary text-xl font-poppinsMedium">{title}</Text>
                         <TouchableOpacity 
                             onPress={() => {
-                                if (!podcastId) {
+                                if (!podcastId || podcastMetadata.category === null) {
                                     console.warn('Podcast ID not available yet');
                                     return;
                                 }
@@ -210,7 +372,7 @@ const PodCut = () => {
                             }}
                             disabled={!podcastId}
                         >
-                            <Text className={`text-tertiary text-lg font-poppinsBold ${!podcastId ? 'opacity-50' : ''}`}>
+                            <Text className={`text-tertiary text-lg ${podcastMetadata.category ? 'font-poppinsBold' : 'font-poppinsRegular'} ${!podcastId ? 'opacity-50' : ''}`}>
                                 {podcastName}
                             </Text>
                         </TouchableOpacity>
@@ -289,7 +451,21 @@ const PodCut = () => {
                             {isSummaryExpanded && (
                                 <View className='rounded-lg p-4 border-2 border-gray-200'>
                                     {episodeData.summary ? (
-                                        <Text className='text-tertiary font-poppinsRegular text-base'>{episodeData.summary}</Text>
+                                        <Markdown
+                                            style={{
+                                                body: {
+                                                    color: '#2e2a72',
+                                                    fontSize: 16,
+                                                    fontFamily: 'Poppins-Regular',
+                                                },
+                                                paragraph: {
+                                                    marginBottom: 8,
+                                                    marginTop: 0,
+                                                },
+                                            }}
+                                        >
+                                            {episodeData.summary}
+                                        </Markdown>
                                     ) : (
                                         <Text className='text-tertiary font-poppinsRegular text-base'>Loading summary...</Text>
                                     )}
@@ -339,11 +515,38 @@ const PodCut = () => {
                 {activeTab === 'transcript' && (
                     <View className='px-4 py-3 pb-32'>
                         <Text className='text-tertiary text-2xl font-poppinsBold mb-3'>Transcript</Text>
-                        <View className='rounded-lg p-4 border-2 border-gray-200'>
-                            {episodeData.transcript ? (
-                                <Text className='text-tertiary font-poppinsRegular text-base'>{episodeData.transcript}</Text>
+                        <View className='rounded-lg border-2 border-gray-200 overflow-hidden'>
+                            {sentences.length > 0 ? (
+                                <FlatList
+                                    ref={transcriptFlatListRef}
+                                    data={sentences}
+                                    renderItem={renderSentence}
+                                    keyExtractor={(item, index) => `sentence-${index}`}
+                                    getItemLayout={getItemLayout}
+                                    style={{ maxHeight: Dimensions.get('window').height * 0.5 }}
+                                    contentContainerStyle={{ padding: 16 }}
+                                    showsVerticalScrollIndicator={true}
+                                    nestedScrollEnabled={true}
+                                    removeClippedSubviews={true}
+                                    maxToRenderPerBatch={10}
+                                    updateCellsBatchingPeriod={50}
+                                    initialNumToRender={15}
+                                    windowSize={5}
+                                    onScrollToIndexFailed={(info) => {
+                                        // Fallback if scroll fails
+                                        setTimeout(() => {
+                                            transcriptFlatListRef.current?.scrollToIndex({
+                                                index: info.index,
+                                                animated: true,
+                                                viewPosition: 0.3,
+                                            });
+                                        }, 100);
+                                    }}
+                                />
                             ) : (
-                                <Text className='text-tertiary font-poppinsRegular text-base'>Loading transcript...</Text>
+                                <View style={{ maxHeight: Dimensions.get('window').height * 0.5 }} className='p-4'>
+                                    <Text className='text-tertiary font-poppinsRegular text-base'>Loading transcript...</Text>
+                                </View>
                             )}
                         </View>
                     </View>

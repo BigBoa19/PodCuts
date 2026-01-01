@@ -1,6 +1,5 @@
 import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView, KeyboardAvoidingView } from 'react-native'
 import React from 'react'
-import images from '@/constants/images'
 import FormField from '../components/FormField'; import CustomButton from '../components/CustomButton'
 import { router } from 'expo-router'
 import * as Google from 'expo-auth-session/providers/google';
@@ -79,7 +78,7 @@ const SignUp = () => {
         <ScrollView>
           <View className='flex-1 w-full justify-center px-4 my-6'>
             <Image
-              source={images.logo}
+              source={require('@/assets/images/podcuts.png')}
               resizeMode='contain'
               className='w-[240px] h-[100px] object-center mx-auto'
             />

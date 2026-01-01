@@ -8,8 +8,7 @@ module.exports = async function () {
   TrackPlayer.addEventListener(Event.RemoteJumpForward, async () => {
     try {
       const { position, duration } = await TrackPlayer.getProgress();
-      // Ensure we don't seek past the end
-      const newPosition = Math.min(position + 10, duration); 
+      const newPosition = Math.min(position + 30, duration); 
       await TrackPlayer.seekTo(newPosition);
     } catch (error) {
       console.error('Failed to seek forward', error);
@@ -19,8 +18,7 @@ module.exports = async function () {
   TrackPlayer.addEventListener(Event.RemoteJumpBackward, async () => {
     try {
       const { position } = await TrackPlayer.getProgress();
-      // Ensure we don't seek past 0
-      const newPosition = Math.max(position - 10, 0);
+      const newPosition = Math.max(position - 30, 0);
       await TrackPlayer.seekTo(newPosition);
     } catch (error) {
       console.error('Failed to seek backward', error);

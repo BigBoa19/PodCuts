@@ -109,7 +109,7 @@ const Podcast = () => {
             transcribe(episodeData.audioUrl).then(async ({sentences, transcript}) => {
                 if (sentences) {
                     // const transcript = getTranscriptFromSentences(sentences)
-                    await updateDoc(episodeDocRef, { transcript });
+                    await updateDoc(episodeDocRef, { sentences });
                     await processRemainingData(episodeIdString, sentences, transcript);
                 }
             }).catch((error) => console.error("Error transcribing: ", error));

@@ -3,7 +3,6 @@ import React from "react";
 import { View, SafeAreaView, Image, ActivityIndicator } from "react-native";
 import { auth } from './firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import images from '@/constants/images';
 
 const Index = () => { 
   const [user, setUser] = React.useState<User | null>(null);
@@ -20,12 +19,7 @@ const Index = () => {
   if (!isAuthChecked) {
     return (
       <SafeAreaView className="bg-secondary flex-1 justify-center items-center">
-        <Image
-          source={images.logo}
-          resizeMode='contain'
-          className='w-[240px] h-[100px]'
-        />
-        <ActivityIndicator size="large" color="#2e2a72" className='mt-4' />
+        
       </SafeAreaView>
     );
   }

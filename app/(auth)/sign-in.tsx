@@ -1,6 +1,5 @@
 import React from 'react'; import { UserContext } from '../context';
 import { View, Text, Image, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native'
-import images from '@/constants/images'; 
 import FormField from '../components/FormField'; import CustomButton from '../components/CustomButton'
 import { router } from 'expo-router'
 import * as Google from 'expo-auth-session/providers/google';
@@ -12,8 +11,10 @@ import { useAppleSignIn } from '../hooks/useAppleSignIn';
 const SignIn = () => {
   const userData = React.useContext(UserContext);
   const [request, response, promptAsync] = Google.useAuthRequest({
-    iosClientId: '460321896686-ttu39rq7iq33jcjc667fijdnb1dheda8.apps.googleusercontent.com'
+    iosClientId: '692607574102-fg9n8eoi6p2ahou8cdvm7u06etcblkoq.apps.googleusercontent.com',
+    webClientId: '692607574102-jgcbik5r8ogjt3dj32uu758l2fo9uk9j.apps.googleusercontent.com'
   });
+  console.log("Redirect URI:", request?.redirectUri);
 
   const addUserToDatabase = async (user: User) => {
     const date = new Date();
@@ -68,7 +69,7 @@ const SignIn = () => {
       <ScrollView>
         <View className='flex-1 w-full justify-center h-full px-4 my-6'>
           <Image
-            source={images.logo}
+            source={require('@/assets/images/podcuts.png')}
             resizeMode='contain'
             className='w-[240px] h-[100px] object-center mx-auto'
           />

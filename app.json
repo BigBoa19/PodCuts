@@ -17,6 +17,13 @@
       "bundleIdentifier": "com.ncdev19.podcuts",
       "usesAppleSignIn": true,
       "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.692607574102-fg9n8eoi6p2ahou8cdvm7u06etcblkoq" 
+            ]
+          }
+        ],
         "UIBackgroundModes": [
           "audio"
         ]
